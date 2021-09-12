@@ -30,7 +30,6 @@ class Api {
             "windowNo": "137be1530135d041807cf5e03365b0cf",
             "sign": "3c922f937cb3388151463087333abd40",
           });
-      return complete("成功了");
       List list = response["list"];
       Map<String, dynamic> params = {
         'c_gender': response["c_gender"],

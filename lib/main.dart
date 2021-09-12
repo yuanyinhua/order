@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+
 import 'api.dart';
 import 'user_info.dart';
 
@@ -42,10 +44,12 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Map> logDatas = [];
   int queueCount = 1;
   List<Map> tasks = [];
-  List<Map> waitTasks = [];
+  List<Map> completeTasks = [];
   Timer? taskTimer;
   Timer? timingTimer;
   DateTime timingTime = DateTime.now();
+  int delayTime = 2;
+  int i = 0;
   // 运行任务
   _start() {
     if (isAutoRun && taskTimer != null && taskTimer!.isActive) {
@@ -54,9 +58,12 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       isAutoRun = true;
     });
-    runTask();
     taskTimer?.cancel();
-    taskTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+    i = 0;
+    completeTasks.clear();
+    runTask();
+    taskTimer =
+        Timer.periodic(Duration(milliseconds: (delayTime + 1) * 1000), (timer) {
       runTask();
     });
   }
@@ -81,9 +88,9 @@ class _MyHomePageState extends State<MyHomePage> {
     timingTimer?.cancel();
     timingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       var time = DateTime.now();
-      if (time.hour == timingTime.hour && 
-      time.minute == timingTime.minute &&
-      time.second == timingTime.second) {
+      if (time.hour == timingTime.hour &&
+          time.minute == timingTime.minute &&
+          time.second == timingTime.second) {
         _start();
         _cancelTiming();
       }
@@ -115,7 +122,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   TextField(
                     controller: code,
-                    decoration: InputDecoration(hintText: "输入"),
                     minLines: 1,
                     maxLines: 4,
                   ),
@@ -140,19 +146,29 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void runTask() async {
-    if (!isAutoRun || (waitTasks.length == 0 && tasks.length == 0)) {
+  void runTask() {
+    if (completeTasks.length == tasks.length) {
+      _cancel();
       return;
     }
-    if (waitTasks.length == 0) {
-      waitTasks = List.from(tasks);
+    if (!isAutoRun ||
+        (tasks.length == 0 && tasks.length == 0) ||
+        i >= tasks.length) {
+      return;
     }
-    final task = waitTasks[0];
+    if (i >= tasks.length) {
+      for (var item in completeTasks) {
+        tasks.removeWhere((element) => element == item);
+      }
+      i = 0;
+    }
+    final task = tasks[i];
+    i++;
     Api.autoAddOrder(task["code"], task["platform"] as int).then((value) {
-      waitTasks.removeAt(0);
       setState(() {
         logDatas.insertAll(0, value);
       });
+      completeTasks.add(task);
     }).onError((error, stackTrace) {
       if (!UserInfo().isLogin) {
         _cancel();
@@ -160,8 +176,6 @@ class _MyHomePageState extends State<MyHomePage> {
           islogin = false;
         });
       }
-      final task = waitTasks.removeAt(0);
-      waitTasks.add(task);
     });
   }
 
@@ -331,7 +345,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
       Container(
-          margin: EdgeInsets.all(10),
+          margin: EdgeInsets.only(),
           child: tableUI(),
           height: 250,
           decoration: BoxDecoration(
@@ -346,31 +360,57 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget timeUI() {
     final time = DateFormat("HH:mm:ss").format(timingTime);
-    return GestureDetector(
-      child: Container(
-        height: 50,
-        margin: EdgeInsets.only(bottom: 10),
-        child: Center(
-          child: Text(
-            time,
-            style: TextStyle(color: Colors.yellow[300], fontSize: 30),
+    return Container(
+      height: 50,
+      child: Stack(
+        children: [
+          GestureDetector(
+            child: SizedBox(
+              height: 50,
+              child: Row(
+                  children: [
+                    Text("间隔秒数$delayTime", style:TextStyle(color: Colors.yellow[200], fontSize: 10)),
+                  ],
+                ),
+            ),
+            onTap: (){
+              _showAlertDialog(context, "间隔秒数", (val) {
+                setState(() {
+                  delayTime = max(1, int.parse(val));
+                });
+              });
+            },
           ),
-        ),
+          Container(
+            height: 50,
+            // decoration: BoxDecoration(color: Colors.red),
+            child: GestureDetector(
+              child: Center(
+                child: Text(
+                  time,
+                  style: TextStyle(color: Colors.yellow[300], fontSize: 30),
+                ),
+              ),
+              onTap: () {
+                _showAlertDialog(context, "时间", (value) {
+                  if (value.length == 0) {
+                    return;
+                  }
+                  try {
+                    List<int> times =
+                        value.split(":").map((e) => int.parse(e)).toList();
+                    var time =
+                        DateTime(2021, 9, 12, times[0], times[1], times[2]);
+                    setState(() {
+                      timingTime = time;
+                    });
+                  } catch (e) {}
+                });
+              },
+            ),
+          )
+        ],
       ),
-      onTap: () {
-        _showAlertDialog(context, "时间", (value) {
-          if (value.length == 0) {
-            return;
-          }
-          try {
-            List<int> times = value.split(":").map((e) => int.parse(e)).toList();
-            var time = DateTime(2021, 9, 12, times[0], times[1], times[2]);
-            setState(() {
-              timingTime = time;
-            });
-          } catch (e) {}
-        });
-      },
     );
   }
 
