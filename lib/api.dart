@@ -56,7 +56,7 @@ class Api {
       return true;
     } catch (e) {
       UserInfo().updateCookie(null);
-      return true;
+      return false;
     }
   }
 

@@ -178,10 +178,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _loading() async {
     try {
-      await Api.load();
+      bool isSuccess = await Api.load();
       setState(() {
         isLoading = false;
-        islogin = UserInfo().isLogin;
+        islogin = isSuccess;
       });
       _updateTasks();
     } catch (e) {}
@@ -390,14 +390,14 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 50,
               child: Row(
                 children: [
-                  Text("间隔秒数$delayTime",
+                  Text("间隔$delayTime",
                       style:
                           TextStyle(color: Colors.yellow[200], fontSize: 15)),
                 ],
               ),
             ),
             onTap: () {
-              _showAlertDialog(context, "间隔秒数", (val) {
+              _showAlertDialog(context, "间隔", (val) {
                 try {
                   setState(() {
                     delayTime = max(0.2, double.parse(val));
