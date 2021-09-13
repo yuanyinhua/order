@@ -72,7 +72,6 @@ class Api {
 
   static server() async {
     try {
-      UserInfo().sessionId = "c6vru4kq2kjuh9i725fss1t02k";
       var g = "2";
       var p =
           "1060250871334882992391293512479216326438167258746469805890028339770628303789813787064911279666129";
@@ -135,8 +134,6 @@ class Api {
       var response = await Request.post(path,
           params: {"indexUrl": "/yutang/&params=$params"});
       UserInfo().data = response;
-      UserInfo().sessionId = "aad6f7inl423ijghf7dtt1aiko";
-      UserInfo().updateCookie(UserInfo().defaultCookie);
       autoAddOrder("袁袁", 1);
     } catch (e) {}
   }

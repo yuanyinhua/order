@@ -14,10 +14,9 @@ class UserInfo {
   // 5:"state" -> 1
   Map<String, dynamic>? data;
 
-  String? sessionId;
   String? sceneId;
   String? _cookie;
-  String _code = ["袁袁", "学学", "雪雪", "峰峰", "珍珍", "答答"].join("\n");
+  String _code = "";
   List<String> orderSuccessDatas = [];
   SharedPreferences? _prefs;
 
@@ -56,9 +55,6 @@ class UserInfo {
   String secret = "";
   String windowNo = "";
   String? get cookie => _cookie;
-  String get defaultCookie {
-    return "PHPSESSID=aad6f7inl423ijghf7dtt1aiko; token-tbtools=340a925965f483adef2973dc757ed514; token-tbtools-oper=53f86dd320393c87f021662cc6f46cbe";
-  }
   Map<String, String> serverData = {};
   updateData(Map<String, dynamic> data) {
     this.data = data;

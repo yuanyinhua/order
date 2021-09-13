@@ -50,8 +50,6 @@ class Request {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       'Connection': 'Keep-Alive',
       if (UserInfo().isLogin) 'Cookie': UserInfo().cookie ?? "",
-      if (UserInfo().sessionId != null && !UserInfo().isLogin)
-        'Cookie': 'PHPSESSID=${UserInfo().sessionId}',
       ...commonParams
     };
   }
