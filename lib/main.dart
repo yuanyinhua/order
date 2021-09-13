@@ -52,24 +52,25 @@ class _MyHomePageState extends State<MyHomePage> {
   int i = 0;
   // 运行任务
   _start() {
-    if (isAutoRun && taskTimer != null && taskTimer!.isActive) {
-      return;
+    if (!isAutoRun) {
+      setState(() {
+       isAutoRun = true;
+      });
     }
-    setState(() {
-      isAutoRun = true;
-    });
-    taskTimer?.cancel();
     i = 0;
     completeTasks.clear();
-    runTask();
-    taskTimer = Timer.periodic(
-        Duration(milliseconds: ((delayTime) * 1000).toInt()), (timer) {
+    if (taskTimer == null) {
       runTask();
-    });
+      taskTimer = Timer.periodic(
+          Duration(milliseconds: ((delayTime) * 1000).toInt()), (timer) {
+        runTask();
+      });
+    }
   }
 
   _cancel() {
     taskTimer?.cancel();
+    taskTimer = null;
     _cancelTiming();
     setState(() {
       isAutoRun = false;
@@ -78,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _cancelTiming() {
     timingTimer?.cancel();
+    timingTimer = null;
     setState(() {
       isTiming = false;
     });
@@ -115,16 +117,15 @@ class _MyHomePageState extends State<MyHomePage> {
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (context, state) {
           return AlertDialog(
+            titlePadding: EdgeInsets.only(left: 20, top: 10),
+            contentPadding: EdgeInsets.only(left: 20, right: 20, bottom: 0),
+            buttonPadding: EdgeInsets.only(right: 20),
             title: Text(title),
             content: Container(
-              height: 100,
+              height: 60,
               child: Column(
                 children: [
-                  TextField(
-                    controller: code,
-                    minLines: 1,
-                    maxLines: 4,
-                  ),
+                  TextField(controller: code, maxLines: 1),
                   Container(
                     height: 10,
                   ),
@@ -148,7 +149,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void runTask() {
     if (completeTasks.length == tasks.length) {
-      _cancel();
       return;
     }
     if (!isAutoRun ||
@@ -171,10 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
       completeTasks.add(task);
     }).onError((error, stackTrace) {
       if (!UserInfo().isLogin) {
-        _cancel();
-        setState(() {
-          islogin = false;
-        });
+        _logout();
       }
     });
   }
@@ -200,6 +197,9 @@ class _MyHomePageState extends State<MyHomePage> {
       datas.addAll(codes.map((e) => {"code": e.trim(), "platform": i}));
     }
     tasks = datas;
+    if (isAutoRun) {
+      _start();
+    }
   }
 
   @override
@@ -339,7 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body = Center(
           child: CupertinoActivityIndicator(
         animating: true,
-        radius: 15,
+        radius: 10,
       ));
     } else {
       body = islogin ? home(context) : loginUI();
@@ -352,16 +352,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
-      Container(
-          margin: EdgeInsets.only(top: 20),
-          child: tableUI(),
-          height: 250,
-          decoration: BoxDecoration(
-              color: Colors.grey[350],
-              border: Border.all(
-                color: Colors.grey,
-                width: 0.5,
-              ))),
+      Expanded(
+        child: Container(
+            margin: EdgeInsets.only(top: 20),
+            child: tableUI(),
+            decoration: BoxDecoration(
+                color: Colors.grey[350],
+                border: Border.all(
+                  color: Colors.grey,
+                  width: 0.5,
+                ))),
+      ),
       buttonsUI()
     ]);
   }
@@ -373,17 +374,17 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Stack(
         children: [
           Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
                   onTap: _logout,
                   child: Center(
-                      child: Text("退出",
-                      style:
-                          TextStyle(color: Colors.yellow[200], fontSize: 10)),)
-                    ),
-              ],
-            ),
+                    child: Text("退出",
+                        style:
+                            TextStyle(color: Colors.yellow[200], fontSize: 15)),
+                  )),
+            ],
+          ),
           GestureDetector(
             child: SizedBox(
               height: 50,
@@ -391,15 +392,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   Text("间隔秒数$delayTime",
                       style:
-                          TextStyle(color: Colors.yellow[200], fontSize: 10)),
+                          TextStyle(color: Colors.yellow[200], fontSize: 15)),
                 ],
               ),
             ),
             onTap: () {
               _showAlertDialog(context, "间隔秒数", (val) {
-                setState(() {
-                  delayTime = max(0.2, double.parse(val));
-                });
+                try {
+                  setState(() {
+                    delayTime = max(0.2, double.parse(val));
+                  });
+                } catch (e) {}
               });
             },
           ),
@@ -440,75 +443,92 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor:
             MaterialStateProperty.all(Color.fromRGBO(208, 208, 208, 1)));
     return Container(
-      margin: EdgeInsets.only(left: 10, right: 10),
+      margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
+      height: 160,
       child: Column(
         children: [
           timeUI(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 160,
-                height: 45,
-                child: ElevatedButton(
-                    style: style,
-                    onPressed: isTiming ? _cancelTiming : _startTiming,
-                    child: SizedBox(
-                        child: Text(
-                      isTiming ? "停止定时" : "定时",
-                      style: TextStyle(color: Colors.black87),
-                    ))),
-              ),
-              SizedBox(
-                width: 160,
-                height: 45,
-                child: ElevatedButton(
-                    style: style,
-                    onPressed: isAutoRun ? _cancel : _start,
-                    child: SizedBox(
-                        child: Text(
-                      isAutoRun ? "停止" : "开始",
-                      style: TextStyle(color: Colors.black87),
-                    ))),
-              ),
-            ],
+          Container(
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    height: 45,
+                    child: ElevatedButton(
+                        style: style,
+                        onPressed: isTiming ? _cancelTiming : _startTiming,
+                        child: SizedBox(
+                            child: Text(
+                          isTiming ? "停止定时" : "定时",
+                          style: TextStyle(color: Colors.black87),
+                        ))),
+                  ),
+                ),
+                Container(
+                  width: 10,
+                ),
+                Expanded(
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    height: 45,
+                    child: ElevatedButton(
+                        style: style,
+                        onPressed: isAutoRun ? _cancel : _start,
+                        child: SizedBox(
+                            child: Text(
+                          isAutoRun ? "停止" : "开始",
+                          style: TextStyle(color: Colors.black87),
+                        ))),
+                  ),
+                ),
+              ],
+            ),
           ),
           Container(
             height: 10,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 160,
-                height: 45,
-                child: ElevatedButton(
-                    style: style,
-                    onPressed: _clearLog,
-                    child: SizedBox(
-                        child: Text(
-                      "清除日志",
-                      style: TextStyle(color: Colors.black87),
-                    ))),
-              ),
-              SizedBox(
-                width: 160,
-                height: 45,
-                child: ElevatedButton(
-                    style: style,
-                    onPressed: () {
-                      _showAlertDialog(context, "账号", (value) {
-                        UserInfo().updateCode(value);
-                        _updateTasks();
-                      });
-                    },
-                    child: SizedBox(
-                        child: Text(
-                      "账号",
-                      style: TextStyle(color: Colors.black87),
-                    ))),
-              ),
-            ],
+          Container(
+            child: Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                        style: style,
+                        onPressed: _clearLog,
+                        child: SizedBox(
+                            child: Text(
+                          "清除日志",
+                          style: TextStyle(color: Colors.black87),
+                        ))),
+                  ),
+                ),
+                Container(
+                  width: 10,
+                ),
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ElevatedButton(
+                        style: style,
+                        onPressed: () {
+                          _showAlertDialog(context, "账号", (value) {
+                            UserInfo().updateCode(value);
+                            _updateTasks();
+                          });
+                        },
+                        child: SizedBox(
+                            child: Text(
+                          "账号",
+                          style: TextStyle(color: Colors.black87),
+                        ))),
+                  ),
+                ),
+              ],
+            ),
           )
         ],
       ),
@@ -578,7 +598,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             scrollDirection: Axis.vertical,
           ),
-        )
+        ),
       ],
     );
   }
