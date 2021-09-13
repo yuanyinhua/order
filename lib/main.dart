@@ -48,7 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Timer? taskTimer;
   Timer? timingTimer;
   DateTime timingTime = DateTime.now();
-  int delayTime = 2;
+  double delayTime = 2;
   int i = 0;
   // 运行任务
   _start() {
@@ -62,8 +62,8 @@ class _MyHomePageState extends State<MyHomePage> {
     i = 0;
     completeTasks.clear();
     runTask();
-    taskTimer =
-        Timer.periodic(Duration(milliseconds: (delayTime + 1) * 1000), (timer) {
+    taskTimer = Timer.periodic(
+        Duration(milliseconds: ((delayTime) * 1000).toInt()), (timer) {
       runTask();
     });
   }
@@ -253,6 +253,15 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {}
   }
 
+  void _logout() {
+    UserInfo().updateCookie(null);
+    _cancel();
+    _cancelTiming();
+    setState(() {
+      islogin = false;
+    });
+  }
+
   Widget qrImage() {
     return Row(
       children: [
@@ -286,7 +295,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget loginUI() {
     final token = TextEditingController();
     final password = TextEditingController();
-    token.text = UserInfo().defaultCookie;
     return Center(
         child: Container(
       margin: EdgeInsets.only(left: 20, right: 20),
@@ -345,7 +353,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
       Container(
-          margin: EdgeInsets.only(),
+          margin: EdgeInsets.only(top: 20),
           child: tableUI(),
           height: 250,
           decoration: BoxDecoration(
@@ -364,26 +372,39 @@ class _MyHomePageState extends State<MyHomePage> {
       height: 50,
       child: Stack(
         children: [
+          Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: _logout,
+                  child: Center(
+                      child: Text("退出",
+                      style:
+                          TextStyle(color: Colors.yellow[200], fontSize: 10)),)
+                    ),
+              ],
+            ),
           GestureDetector(
             child: SizedBox(
               height: 50,
               child: Row(
-                  children: [
-                    Text("间隔秒数$delayTime", style:TextStyle(color: Colors.yellow[200], fontSize: 10)),
-                  ],
-                ),
+                children: [
+                  Text("间隔秒数$delayTime",
+                      style:
+                          TextStyle(color: Colors.yellow[200], fontSize: 10)),
+                ],
+              ),
             ),
-            onTap: (){
+            onTap: () {
               _showAlertDialog(context, "间隔秒数", (val) {
                 setState(() {
-                  delayTime = max(1, int.parse(val));
+                  delayTime = max(0.2, double.parse(val));
                 });
               });
             },
           ),
           Container(
             height: 50,
-            // decoration: BoxDecoration(color: Colors.red),
             child: GestureDetector(
               child: Center(
                 child: Text(

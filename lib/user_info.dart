@@ -39,6 +39,8 @@ class UserInfo {
     _cookie = val;
     if (val != null && val.length > 0) {
       _prefs?.setString("cookie", val);
+    } else {
+      _prefs?.remove("cookie");
     }
   }
 
