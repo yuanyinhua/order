@@ -122,10 +122,10 @@ class _MyHomePageState extends State<MyHomePage> {
             buttonPadding: EdgeInsets.only(right: 20),
             title: Text(title),
             content: Container(
-              height: 60,
+              height: 80,
               child: Column(
                 children: [
-                  TextField(controller: code, maxLines: 1),
+                  TextField(controller: code, maxLines: 2),
                   Container(
                     height: 10,
                   ),
