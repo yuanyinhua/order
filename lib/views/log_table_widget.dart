@@ -55,10 +55,14 @@ import 'package:task/models/platform_account_data.dart';
                 ),
               ),
             ),
-            Text(
+            Container(
+              padding: EdgeInsets.all(5),
+              constraints: BoxConstraints(maxHeight: 60),
+              child: Text(
               item.log ?? "",
-              textAlign: TextAlign.center,
-            )
+              textAlign: TextAlign.left,
+            ),
+            ),
           ])
       ],
     );

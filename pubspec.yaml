@@ -37,7 +37,8 @@ dependencies:
   webview_flutter: ^2.1.0
   background_fetch: ^1.0.1
   fluttertoast: ^8.0.8
-  
+  json_serializable: ^5.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

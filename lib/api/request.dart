@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 import '../models/user_info.dart';
-import 'error.dart';
+import '../tools/error.dart';
 
 // 创建 Dio 实例
 Dio _dio = Dio(BaseOptions(

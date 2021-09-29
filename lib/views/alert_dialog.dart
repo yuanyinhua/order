@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 showAlertDialog(BuildContext context, String title, String placeholder,
   Function(String) complete) {
     var code = TextEditingController();

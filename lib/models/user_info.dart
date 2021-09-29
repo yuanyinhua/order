@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config.dart';
 import 'login_info.dart';
-import 'platform_account_data.dart';
 
 class UserInfo {
   UserInfo._internal();
@@ -22,16 +21,24 @@ class UserInfo {
 
   String? sceneId;
   LoginInfo? _loginInfo;
-  Config config = Config(isActive: false, platformAccounts: "", delayTime: 1.2, queryDelayTime: 0.5);
+  Config config = Config(
+      isActive: false,
+      platformAccounts: "",
+      delayTime: 1.2,
+      queryDelayTime: 0.3);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
   bool get isLogin {
     return _loginInfo != null;
   }
-  
+
   // 保存配置信息
-  saveConfig({String? platformAccounts, String? activeCode, double? delayTime, double? queryDelayTime}) {
+  saveConfig(
+      {String? platformAccounts,
+      String? activeCode,
+      double? delayTime,
+      double? queryDelayTime}) {
     if (platformAccounts != null) {
       config.platformAccounts = platformAccounts;
     }
@@ -48,30 +55,37 @@ class UserInfo {
   }
 
   // 更新登录信息
-  updateLoginInfo(String cookies, {Map? wechatData, String? activeCode}) {
-    if (cookies is String && cookies.length > 0 && !cookies.contains("PHPSESSID")) {
-      cookies = "PHPSESSID=;$cookies";
-    }
+  updateLoginInfo(String? cookies, {Map? wechatData, String? activeCode}) {
     if (activeCode != null) {
       saveConfig(activeCode: activeCode);
     }
-    _loginInfo = LoginInfo(cookies: cookies, weChatData: wechatData);
-    _prefs!.setString("loginInfo", _loginInfo.toString());
+    if (cookies is String && cookies.length > 0) {
+      if (!cookies.contains("PHPSESSID")) {
+        cookies = "PHPSESSID=;$cookies";
+      }
+      _loginInfo = LoginInfo(cookies: cookies, weChatData: wechatData);
+      _prefs!.setString("loginInfo", _loginInfo.toString());
+    } else {
+      _loginInfo = null;
+      _prefs!.remove("loginInfo");
+    }
   }
 
   // 初始化本地缓存
   Future setup() async {
     try {
-      await Future.delayed(Duration(seconds: 1));
       _prefs = await SharedPreferences.getInstance();
       if (_prefs!.getString("loginInfo") != null) {
-        _loginInfo = LoginInfo.fromJson(json.decode(_prefs!.getString("loginInfo") as String));
+        _loginInfo = LoginInfo.fromJson(
+            json.decode(_prefs!.getString("loginInfo") as String));
       }
       if (_prefs!.getString("config") != null) {
-        config = Config.fromJson(json.decode(_prefs!.getString("config") as String));
+        config =
+            Config.fromJson(json.decode(_prefs!.getString("config") as String));
       }
     } catch (e) {}
   }
+
   // 公共参数
   String secret = "";
   String windowNo = "";

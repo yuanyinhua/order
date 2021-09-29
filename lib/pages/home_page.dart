@@ -6,11 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
 import 'package:task/api/api.dart';
-import 'package:task/api/error.dart';
+import 'package:task/tools/error.dart';
 import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
-import 'package:task/model/my_cookies.dart';
-import '../my_router.dart';
+import 'package:task/models/my_cookies.dart';
+import 'package:task/pages/query_available_page.dart';
 
 import 'package:task/views/alert_dialog.dart';
 import 'package:task/views/loading_widget.dart';
@@ -158,9 +158,16 @@ class _HomePageState extends State<HomePage> {
     }
     final task = waitTasks[0];
     waitTasks.removeAt(0);
+    // 更新日志
+    void complete(String? result) {
+      setState(() {
+        logDatas.insert(0, PlatformAccountLog(accountData: task, log: result));
+      });
+    }
 
-    Api.autoAddOrder(task).then((value) {
-      logDatas.insert(0, PlatformAccountLog(accountData: task, log: value));
+    // 下单
+    Api.createOrder(task).then((value) {
+      complete(value);
       completeTasks.add(task);
     }).onError((error, stackTrace) {
       if (error is MError && error.code == -1) {
@@ -168,7 +175,7 @@ class _HomePageState extends State<HomePage> {
       } else {
         waitTasks.add(task);
       }
-      logDatas.insert(0, PlatformAccountLog(accountData: task, log: error.toString()));
+      complete(error.toString());
     });
   }
 
@@ -216,7 +223,6 @@ class _HomePageState extends State<HomePage> {
     return Column(mainAxisSize: MainAxisSize.max, children: [
       Expanded(
         child: Container(
-            margin: EdgeInsets.only(top: 20),
             child: LogTableWidget(logDatas),
             decoration: BoxDecoration(
                 color: Colors.grey[350],
@@ -235,18 +241,6 @@ class _HomePageState extends State<HomePage> {
       height: 60,
       child: Stack(
         children: [
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.end,
-          //   children: [
-          //     GestureDetector(
-          //         onDoubleTap: _logout,
-          //         child: SizedBox(
-          //           height: 60,
-          //           width: 50,
-          //           child: Text(""),
-          //         )),
-          //   ],
-          // ),
           if (isActive)
             Column(
               children: [
@@ -403,7 +397,12 @@ class _HomePageState extends State<HomePage> {
                     child: ElevatedButton(
                         style: style,
                         onPressed: () {
-                          MyRouter.pushNoParams(context, "app://query");
+                          showModalBottomSheet(
+                            context: context, 
+                            isScrollControlled: true,
+                            builder: (context) {
+                            return QueryAvailablePage();
+                          });
                         },
                         child: SizedBox(
                             child: Text(

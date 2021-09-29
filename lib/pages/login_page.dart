@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:task/api/api.dart';
 import 'package:task/models/user_info.dart';
-import 'package:task/views/toast_widget.dart';
+import 'package:task/views/my_toast.dart';
 
 class LoginPage extends StatefulWidget {
   final Function complete;

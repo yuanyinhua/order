@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:html/parser.dart' show parse;
-import 'package:task/api/error.dart';
+import 'package:task/tools/error.dart';
 import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
+import 'package:task/tools/bigInt.dart';
+
 import 'request.dart';
-import 'bigInt.dart';
 
 class Api {
-  static Future<String> autoAddOrder(PlatformAccountData task) async {
+  static Future<String> createOrder(PlatformAccountData task) async {
     try {
       var response = await _search(task);
       List list = response["list"];
@@ -41,6 +42,7 @@ class Api {
     }
   }
 
+  // 搜索商品
   static Future _search(PlatformAccountData task) async {
     try {
       return await Request.post("yutang/index.php/index/Job/getJobByVipCode", params: {
@@ -56,6 +58,7 @@ class Api {
     }
   }
 
+  // 加载，获取必要参数
   static Future<bool> load() async {
     try {
       await UserInfo().setup();
@@ -66,6 +69,7 @@ class Api {
     }
   }
 
+  // 校验
   static Future<bool> check() async {
     try {
       await Request.post("tbtools/index.php/com/Login/getRongUserToken",
@@ -75,6 +79,7 @@ class Api {
       return false;
     }
   }
+
 
   static server() async {
     try {
@@ -140,7 +145,7 @@ class Api {
       var response = await Request.post(path,
           params: {"indexUrl": "/yutang/&params=$params"});
       UserInfo().data = response;
-      autoAddOrder(PlatformAccountData(name: "袁袁"));
+      createOrder(PlatformAccountData(name: "袁袁"));
     } catch (e) {}
   }
 }

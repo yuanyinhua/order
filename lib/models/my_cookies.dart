@@ -28,17 +28,19 @@ class MyCookies {
           },
           javascriptMode: JavascriptMode.unrestricted,
           onPageFinished: (u) async {
-            String s = await _getCookie();
-            UserInfo().updateLoginInfo(s);
-            complete(s);
+            UserInfo().updateLoginInfo(await _getCookie());
+            complete();
           },
         ));
   }
 
-  Future<String> _getCookie() async {
-    await Future.delayed(Duration(seconds: 2));
-    final String cookies =
-        await _controller!.evaluateJavascript("document.cookie");
+  Future<String?> _getCookie() async {
+    String? cookies;
+    int time = DateTime.now().second;
+    while (cookies == null && time - DateTime.now().second < 5) {
+      await Future.delayed(Duration(seconds: 1));
+      cookies = await _controller!.evaluateJavascript("document.cookie");
+    }
     return cookies;
   }
 }

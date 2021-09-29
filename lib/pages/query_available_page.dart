@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:task/api/api.dart';
-import 'package:task/api/error.dart';
+import 'package:task/tools/error.dart';
 import 'package:task/models/platform_account_data.dart';
+import 'package:task/models/user_info.dart';
 import 'package:task/views/log_table_widget.dart';
 
 class QueryAvailablePage extends StatefulWidget {
@@ -13,16 +15,46 @@ class QueryAvailablePage extends StatefulWidget {
 }
 
 class _QueryAvailablePageState extends State<QueryAvailablePage> {
-  final double _delayTime = 0.5;
+  double _delayTime = UserInfo().config.queryDelayTime;
   List<PlatformAccountLog> _logDatas = [];
-  final List<PlatformAccountData> _tasks = [];
-  bool isRun = true;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: SafeArea(
-        child: LogTableWidget(_logDatas),
+    return Container(
+      height: MediaQuery.of(context).size.height - 50,
+      child: Column(
+        children: [
+          SizedBox(
+            height: 35,
+            child: Stack(
+              children: [
+                Center(
+                  child: Text("查降权", style: TextStyle(color: Colors.black),),
+                ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      child: SizedBox(
+                      child: Center(
+                        child: Icon(Icons.close),
+                      ),
+                      width: 44,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    )
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.end,
+                )
+              ],
+            ),
+          ),
+          Expanded(
+              child: SizedBox(
+            height: double.infinity,
+            child: LogTableWidget(_logDatas),
+          ))
+        ],
       ),
     );
   }
@@ -30,19 +62,16 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
   @override
   void initState() {
     super.initState();
-    _queryAllTaskAvailable(List.from(_tasks));
+    _queryAllTaskAvailable(List.from(UserInfo().config.platformAccountDatas));
   }
 
   // 查询下单账号状态
   void _queryAllTaskAvailable(List<PlatformAccountData> tasks) {
-    if (tasks.length == 0 || !isRun) {
+    if (tasks.length == 0) {
       return;
     }
     // 循环
     Function loop = (List<PlatformAccountData> tasks) {
-      if (!isRun) {
-        return;
-      }
       Future.delayed(Duration(milliseconds: (_delayTime * 1000).toInt()))
           .then((value) {
         _queryAllTaskAvailable(tasks);
@@ -65,8 +94,20 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
       if (error is MError && error.code == -1) {
         complete(task, error.toString());
         tasks.removeAt(0);
+      } else if (error is MError && error.code == -100) {
+        _delayTime += 0.1;
+        UserInfo().saveConfig(queryDelayTime: _delayTime);
+      } else {
+        complete(task, error.toString());
+        tasks.removeAt(0);
+        tasks.add(task);
       }
       loop(tasks);
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }
