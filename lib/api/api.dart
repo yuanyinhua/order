@@ -1,51 +1,58 @@
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:html/parser.dart' show parse;
-import 'package:task/user_info.dart';
+import 'package:task/api/error.dart';
+import 'package:task/models/platform_account_data.dart';
+import 'package:task/models/user_info.dart';
 import 'request.dart';
 import 'bigInt.dart';
 
 class Api {
-  static Future<List<Map>> autoAddOrder(String code, int platform) async {
-    String platformName =
-        {1: "淘宝", 2: "京东", 3: "其它", 4: "拼多多", 5: "抖音"}[platform] as String;
-    Future<List<Map>> complete(dynamic data) {
-      if (data is Map) {
-        if (data["code"] == -1 || data["code"] == null) {
-          return Future.value([
-            {"code": "$code", "name": data["msg"] ?? ""}
-          ]);
-        }
-      }
-      return Future.error(data);
-    }
+  static Future<String> autoAddOrder(PlatformAccountData task) async {
     try {
-      var response = await Request.post(
-          "yutang/index.php/index/Job/getJobByVipCode",
-          params: {
-            "page": 1,
-            "limit": 10,
-            "c_vip_code": code,
-            "i_platform_id": platform,
-            "windowNo": "137be1530135d041807cf5e03365b0cf",
-            "sign": "3c922f937cb3388151463087333abd40",
-          });
+      var response = await _search(task);
       List list = response["list"];
       Map<String, dynamic> params = {
         'c_gender': response["c_gender"],
-        'c_platform': platformName,
-        'c_vip_code': code,
+        'c_platform': task.platform.name,
+        'c_vip_code': task.name,
         'i_job_id': list[0]["i_job_id"],
         'i_shop_id': list[0]["i_shop_id"],
         'path': ["job", "desktopVip"],
-        'i_platform_id': code
+        'i_platform_id': task.name
       };
       var data = await Request.post("yutang/index.php/index/Order/addOrder",
           params: params);
       jsonDecode(data);
-      return complete({"msg": "预约成功;${list[0]["c_name"]}${list[0]["c_shop_name"]}"});
+      return "预约成功;${list[0]["c_name"]}${list[0]["c_shop_name"]}";
+    } on MError catch (e) {
+      return Future.error(e);
     } catch (e) {
-      return complete(e);
+      return Future.error(e);
+    }
+  }
+
+  static Future queryTaskAvailable(PlatformAccountData task) async {
+    try {
+      await _search(task);
+      return Future.value("查询成功");
+    } catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  static Future _search(PlatformAccountData task) async {
+    try {
+      return await Request.post("yutang/index.php/index/Job/getJobByVipCode", params: {
+        "page": 1,
+        "limit": 10,
+        "c_vip_code": task.name,
+        "i_platform_id": task.platform.id,
+        "windowNo": "137be1530135d041807cf5e03365b0cf",
+        "sign": "3c922f937cb3388151463087333abd40",
+      });
+    } catch (e) {
+      return Future.error(e);
     }
   }
 
@@ -53,9 +60,8 @@ class Api {
     try {
       await UserInfo().setup();
       await Api.server();
-      return true;
+      return UserInfo().isLogin;
     } catch (e) {
-      UserInfo().updateCookie(null);
       return false;
     }
   }
@@ -116,7 +122,7 @@ class Api {
     } catch (e) {}
   }
 
-  static Future login(Map<String, dynamic>? data) async {
+  static Future login({Map<String, dynamic>? data}) async {
     if (data == null) {
       data = {
         "headimgurl":
@@ -134,7 +140,7 @@ class Api {
       var response = await Request.post(path,
           params: {"indexUrl": "/yutang/&params=$params"});
       UserInfo().data = response;
-      autoAddOrder("袁袁", 1);
+      autoAddOrder(PlatformAccountData(name: "袁袁"));
     } catch (e) {}
   }
 }

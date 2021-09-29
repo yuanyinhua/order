@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import 'user_info.dart';
-
+import '../models/user_info.dart';
+import 'error.dart';
 
 // 创建 Dio 实例
 Dio _dio = Dio(BaseOptions(
@@ -141,12 +141,13 @@ class Request {
         if (code == 0) {
           return data["data"];
         }
-        if (code == -99) {
-          UserInfo().updateCookie(null);
-          return Future.error(data["msg"]);
+        String? msg = response.data["msg"];
+        if (code == -1 && msg != null && msg.contains("操作频繁")) {
+          code = -100;
+        } else if (code == -99 && msg == null) {
+          msg = "服务异常";
         }
-        return Future.error(
-            {'msg': response.data["msg"], 'code': code});
+        return Future.error(MError(code, msg));
       } else {
         return Future.error(_httpError(response.statusCode));
       }
