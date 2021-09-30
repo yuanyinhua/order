@@ -57,7 +57,7 @@ import 'package:task/models/platform_account_data.dart';
             ),
             Container(
               padding: EdgeInsets.all(5),
-              constraints: BoxConstraints(maxHeight: 60),
+              constraints: BoxConstraints(maxHeight: 150),
               child: Text(
               item.log ?? "",
               textAlign: TextAlign.left,

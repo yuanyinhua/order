@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -17,11 +18,11 @@ class _LoginPageState extends State<LoginPage> {
   String? qrCode;
   int reqCount = 0;
   final reqCountMax = 100;
-
+  bool isWechatLogin = false;
   @override
   void initState() {
     super.initState();
-    Api.login();
+    _getqrCodeData();
   }
 
   @override
@@ -47,17 +48,20 @@ class _LoginPageState extends State<LoginPage> {
       height: 270,
       child: Column(
         children: [
-          TextField(
+          if (!isWechatLogin) TextField(
             obscureText: true,
             decoration: InputDecoration(hintText: "输入登录信息"),
             controller: token,
+          ),
+          if (isWechatLogin) Container(
+            child: qrImage(),
           ),
           TextField(
             obscureText: true,
             decoration: InputDecoration(hintText: "输入认证码"),
             controller: activeInfo,
           ),
-          Container(
+          if (!isWechatLogin) Container(
             child: SizedBox(
               width: double.infinity,
               height: 45,
@@ -86,7 +90,6 @@ class _LoginPageState extends State<LoginPage> {
     ));
   }
   // 获取
-  // ignore: unused_element
   void _getqrCodeData() {
     Api.qrCodeData().then((data) {
       setState(() {
@@ -96,26 +99,26 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-  // 重新开始等待扫描
-  void _retryWaitScan() {
-    setState(() {
-      reqCount = 0;
-    });
-    _waitScan();
-  }
-
   // 等待扫一扫
   void _waitScan() async {
-    Api.waitScan().then((data) {
-      Api.login();
-    }).onError((error, stackTrace) {
+    try {
+      await Api.waitScan();
+      await Api.login();
+    } catch (e) {
       setState(() {
         reqCount += 1;
         if (reqCount <= reqCountMax) {
           _waitScan();
+        } else {
+          Future.delayed(Duration(seconds: 3)).then((value) {
+            setState(() {
+              reqCount = 0;
+            });
+            _waitScan();
+          });
         }
       });
-    });
+    }
   }
 
     // 获取二维码UI
@@ -128,25 +131,9 @@ class _LoginPageState extends State<LoginPage> {
               data: qrCode!,
               size: 250,
             ),
-            if (reqCount > reqCountMax)
-              GestureDetector(
-                child: Container(
-                  child: Center(
-                      child: Text(
-                    "二维码失效,点击重试",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.red),
-                  )),
-                  width: 250,
-                  height: 250,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-                onTap: _retryWaitScan,
-              )
           ],
         )
       ],
     );
   }
-
 }

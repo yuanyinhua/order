@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
-import '../models/user_info.dart';
-import '../tools/error.dart';
+
+import 'package:task/models/user_info.dart';
+import 'package:task/tools/error.dart';
 
 // 创建 Dio 实例
 Dio _dio = Dio(BaseOptions(
@@ -99,8 +100,11 @@ class Request {
   // 参数处理
   static FormData requestParams(params) {
     var formData = params != null ? FormData.fromMap(params) : FormData();
-    if (params?["i_platform_id"] != null && UserInfo().secret.length > 0 ) {
-      formData.fields.add(MapEntry("sign", sign(params?["i_platform_id"])));
+    if (UserInfo().secret.length > 0) {
+      formData.fields.add(MapEntry("sign", sign(params?["i_platform_id"] ?? 1)));
+    }
+    if (UserInfo().windowNo.length > 0) {
+      formData.fields.add(MapEntry("windowNo", UserInfo().windowNo));
     }
     return formData;
   }

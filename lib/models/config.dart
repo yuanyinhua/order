@@ -30,15 +30,7 @@ class Config {
 
   // 当前平台账号
   List<PlatformAccountData> get platformAccountDatas {
-    if (this.platformAccounts?.length == 0) {
-      return [];
-    }
-    List<PlatformAccountData> datas = this
-        .platformAccounts!
-        .split("\n")
-        .map((e) => PlatformAccountData(name: e.trim()))
-        .toList();
-    return datas;
+    return PlatformAccountLog.datasFromString(this.platformAccounts);
   }
 }
 

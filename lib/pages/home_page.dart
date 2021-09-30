@@ -15,6 +15,7 @@ import 'package:task/pages/query_available_page.dart';
 import 'package:task/views/alert_dialog.dart';
 import 'package:task/views/loading_widget.dart';
 import 'package:task/views/log_table_widget.dart';
+import 'package:task/views/button_widget.dart';
 import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -60,7 +61,6 @@ class _HomePageState extends State<HomePage> {
             });
     }
     return Scaffold(
-        extendBody: true,
         body: SafeArea(
           child: Stack(
             children: [MyCookies().getToken(() {}), body],
@@ -303,10 +303,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buttonsUI() {
-    final style = ButtonStyle(
-        backgroundColor:
-            MaterialStateProperty.all(Color.fromRGBO(208, 208, 208, 1)));
-    final textStyle = TextStyle(color: Colors.black87, fontSize: 12);
     return Container(
       margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
       height: 160,
@@ -320,14 +316,9 @@ class _HomePageState extends State<HomePage> {
                   child: SizedBox(
                     width: double.maxFinite,
                     height: 45,
-                    child: ElevatedButton(
-                        style: style,
+                    child: ButtonWidget(
                         onPressed: isTiming ? _cancelTiming : _startTiming,
-                        child: SizedBox(
-                            child: Text(
-                          isTiming ? "停止定时" : "定时",
-                          style: textStyle,
-                        ))),
+                        text: isTiming ? "停止定时" : "定时"),
                   ),
                 ),
                 Container(
@@ -337,14 +328,9 @@ class _HomePageState extends State<HomePage> {
                   child: SizedBox(
                     width: double.maxFinite,
                     height: 45,
-                    child: ElevatedButton(
-                        style: style,
+                    child: ButtonWidget(
                         onPressed: isRun ? _cancel : _start,
-                        child: SizedBox(
-                            child: Text(
-                          isRun ? "停止" : "开始",
-                          style: textStyle,
-                        ))),
+                        text: isRun ? "停止" : "开始"),
                   ),
                 ),
               ],
@@ -360,14 +346,10 @@ class _HomePageState extends State<HomePage> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 45,
-                    child: ElevatedButton(
-                        style: style,
-                        onPressed: _logout,
-                        child: SizedBox(
-                            child: Text(
-                          "退出",
-                          style: textStyle,
-                        ))),
+                    child: ButtonWidget(
+                      onPressed: _logout,
+                      text: "退出",
+                    ),
                   ),
                 ),
                 Container(
@@ -377,14 +359,7 @@ class _HomePageState extends State<HomePage> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 45,
-                    child: ElevatedButton(
-                        style: style,
-                        onPressed: _clearLog,
-                        child: SizedBox(
-                            child: Text(
-                          "清除日志",
-                          style: textStyle,
-                        ))),
+                    child: ButtonWidget(onPressed: _clearLog, text: "清除日志"),
                   ),
                 ),
                 Container(
@@ -394,21 +369,16 @@ class _HomePageState extends State<HomePage> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 45,
-                    child: ElevatedButton(
-                        style: style,
+                    child: ButtonWidget(
                         onPressed: () {
                           showModalBottomSheet(
-                            context: context, 
-                            isScrollControlled: true,
-                            builder: (context) {
-                            return QueryAvailablePage();
-                          });
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) {
+                                return QueryAvailablePage();
+                              });
                         },
-                        child: SizedBox(
-                            child: Text(
-                          "查降权",
-                          style: textStyle,
-                        ))),
+                        text: "查降权"),
                   ),
                 ),
                 Container(
@@ -418,19 +388,14 @@ class _HomePageState extends State<HomePage> {
                   child: SizedBox(
                     width: double.infinity,
                     height: 45,
-                    child: ElevatedButton(
-                        style: style,
+                    child: ButtonWidget(
                         onPressed: () {
                           showAlertDialog(context, "账号", "换行分隔", (value) {
                             UserInfo().saveConfig(platformAccounts: value);
                             _updateTasks();
                           });
                         },
-                        child: SizedBox(
-                            child: Text(
-                          "配置账号",
-                          style: textStyle,
-                        ))),
+                        text: "配置账号"),
                   ),
                 ),
               ],

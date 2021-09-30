@@ -41,4 +41,16 @@ class PlatformAccountLog {
   PlatformAccountData accountData;
   String? log;
   PlatformAccountLog({required this.accountData, this.log});
+
+    // 当前平台账号
+  static List<PlatformAccountData> datasFromString(String? value)  {
+    if (value == null || value == "") {
+      return [];
+    }
+    List<PlatformAccountData> datas = value
+        .split("\n")
+        .map((e) => PlatformAccountData(name: e.trim()))
+        .toList();
+    return datas;
+  }
 }

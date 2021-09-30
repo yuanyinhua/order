@@ -35,8 +35,12 @@ class Api {
 
   static Future queryTaskAvailable(PlatformAccountData task) async {
     try {
-      await _search(task);
-      return Future.value("查询成功");
+    await Request.post("yutang/index.php/toolsapi/ToolsApi/queryVipCode", params: {
+        "c_vip_code": task.name,
+        "api":"getVipCodeDown",
+        "path": ["job", "desktopVip"]
+      });
+      return "查询成功";
     } catch (e) {
       return Future.error(e);
     }
