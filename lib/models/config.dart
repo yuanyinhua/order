@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
-import 'platform_account_data.dart';
-
 @JsonSerializable()
 class Config {
   // 是否激活

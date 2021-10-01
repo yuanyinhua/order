@@ -1,9 +1,17 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:task/api/api.dart';
 import 'package:task/models/user_info.dart';
@@ -36,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-            // 获取二维码内容
+    // 获取二维码内容
     _getQrCodeData = Future.delayed(Duration(seconds: 1), () async {
       var response = await Api.qrCodeData();
       setState(() {
@@ -47,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
-    @override
+  @override
   void dispose() {
     timer?.cancel();
     super.dispose();
@@ -163,22 +171,23 @@ class _LoginPageState extends State<LoginPage> {
   // 等待扫一扫
   void _waitLogin() async {
     if (timer == null) {
-      timer = Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()), (timer) async {
-          if (!_isWechatLogin) {
-            return;
+      timer = Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
+          (timer) async {
+        if (!_isWechatLogin) {
+          return;
+        }
+        try {
+          await Api.waitLogin();
+        } catch (e) {
+          _waitScanReqCount += 1;
+          if (_waitScanReqCount > _waitScanreqCountMax) {
+            _waitScanReqCount = 0;
+            _stopWaitLogin();
+            await Future.delayed(Duration(seconds: 5));
+            _waitLogin();
           }
-          try {
-            await Api.waitLogin();
-          } catch (e) {
-            _waitScanReqCount += 1;
-            if (_waitScanReqCount > _waitScanreqCountMax) {
-              _waitScanReqCount = 0;
-              _stopWaitLogin();
-              await Future.delayed(Duration(seconds: 5));
-              _waitLogin();
-            }
-          }
-       });
+        }
+      });
     }
   }
 
@@ -189,11 +198,33 @@ class _LoginPageState extends State<LoginPage> {
 
   // 获取二维码UI
   Widget qrImage() {
+    GlobalKey _globalKey = new GlobalKey();
     return FutureBuilder(
       future: _getQrCodeData,
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
         if (snapshot.hasData) {
-          return QrImage(data: snapshot.data!, size: 200);
+          return GestureDetector(
+            onLongPress: () async {
+              // 访问权限
+              var status = await Permission.storage.status;
+              if (!status.isGranted) {
+                status = await Permission.storage.request();
+                return;
+              }
+              // 保存图片
+              RenderRepaintBoundary boundary = _globalKey.currentContext!
+                  .findRenderObject() as RenderRepaintBoundary;
+              ui.Image image = await boundary.toImage(pixelRatio: 0);
+              ByteData byteData = await image.toByteData(
+                  format: ui.ImageByteFormat.png) as ByteData;
+              await ImageGallerySaver.saveImage(byteData.buffer.asUint8List());
+              launch('weixin://');
+            },
+            child: RepaintBoundary(
+              key: _globalKey,
+              child: QrImage(data: snapshot.data!, size: 200),
+            ),
+          );
         } else {
           return Container(
             height: 200,
