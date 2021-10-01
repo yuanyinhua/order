@@ -23,7 +23,7 @@ import 'package:task/models/platform_account_data.dart';
               color: Colors.grey[350],
             ),
             children: [
-              for (var item in ["账号", "日志"])
+              for (var item in ["任务id", "日志"])
                 //增加行高
                 SizedBox(
                   height: 32.0,

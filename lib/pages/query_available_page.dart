@@ -55,24 +55,25 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
               onPressed: () {
                 showAlertDialog(context, "修改任务", "", (value) {
                   setState(() {
-                    _tasks = PlatformAccountLog.datasFromString(value);
+                    _tasks = PlatformAccountData.datasFromString(value);
                   });
                 });
               },
             ),
           )),
           if (!isRun)
-          Container(
-            width: 10,
-          ),
-          if (!isRun) Expanded(
-              child: SizedBox(
-            width: double.infinity,
-            child: ButtonWidget(
-              text: "开始",
-              onPressed: _start,
+            Container(
+              width: 10,
             ),
-          )),
+          if (!isRun)
+            Expanded(
+                child: SizedBox(
+              width: double.infinity,
+              child: ButtonWidget(
+                text: "开始",
+                onPressed: _start,
+              ),
+            )),
         ],
       ),
     );
@@ -113,7 +114,8 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
   @override
   void initState() {
     super.initState();
-    _tasks = List.from(UserInfo().config.platformAccountDatas);
+    _tasks = List.from(
+        PlatformAccountData.datasFromString(UserInfo().platformAccount));
     _start();
   }
 
@@ -128,8 +130,7 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
       });
     }
 
-    await Future.wait(_tasks.map(
-        (e) => Api.queryTaskAvailable(e).then((value) {
+    await Future.wait(_tasks.map((e) => Api.queryTaskAvailable(e).then((value) {
           complete(e, value);
         }).onError((error, stackTrace) {
           complete(e, error.toString());
@@ -138,5 +139,4 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
       isRun = false;
     });
   }
-
 }

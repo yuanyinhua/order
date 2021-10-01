@@ -9,7 +9,7 @@ class Config {
   // 是否激活
   bool isActive;
   // 平台账号
-  String? platformAccounts;
+  String? platformAccount;
   // 下单延迟，防止接口响应频繁
   double delayTime;
   // 查询延迟，防止接口响应频繁
@@ -17,7 +17,7 @@ class Config {
 
   Config(
       {required this.isActive,
-      this.platformAccounts,
+      this.platformAccount,
       required this.delayTime,
       required this.queryDelayTime});
 
@@ -27,22 +27,17 @@ class Config {
   String toString() {
     return json.encode(_$ConfigToJson(this));
   }
-
-  // 当前平台账号
-  List<PlatformAccountData> get platformAccountDatas {
-    return PlatformAccountLog.datasFromString(this.platformAccounts);
-  }
 }
 
 Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
     isActive: json['isActive'] as bool,
-    platformAccounts: json['platformAccounts'],
+    platformAccount: json['platformAccount'],
     delayTime: json['delayTime'],
     queryDelayTime: json['queryDelayTime']);
 
 Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
       'isActive': instance.isActive,
-      'platformAccounts': instance.platformAccounts,
+      'platformAccount': instance.platformAccount,
       'delayTime': instance.delayTime,
       'queryDelayTime': instance.queryDelayTime
     };

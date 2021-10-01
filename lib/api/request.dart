@@ -4,10 +4,12 @@ import 'dart:convert';
 
 import 'package:task/models/user_info.dart';
 import 'package:task/tools/error.dart';
+import 'package:task/tools/bigInt.dart';
+import 'constant.dart';
 
 // 创建 Dio 实例
 Dio _dio = Dio(BaseOptions(
-  baseUrl: 'http://47.115.36.80:8889',
+  baseUrl: kBaseUrl,
   connectTimeout: 5000,
   receiveTimeout: 3000,
 ));
@@ -17,6 +19,10 @@ Dio _wxDio = Dio(BaseOptions(
   connectTimeout: 5000,
   receiveTimeout: 3000,
 ));
+
+// 公共参数
+String _kParamsSecret = "";
+String _kParamsWindowNo = "";
 
 class Request {
   static Map<String, dynamic> _headers(String path) {
@@ -81,30 +87,30 @@ class Request {
   }
 
   static String sign(dynamic platform) {
-    var secret = UserInfo().secret;
     var configData = {
       "filter": {
         "i_addorder_mode": 1,
-        "i_platform_id":( platform ?? 1).toString(),
+        "i_platform_id": (platform ?? 1).toString(),
         "i_shop_id": "",
         "search": ""
       },
       "path": ["job", "desktopVip"],
-      "windowNo": UserInfo().windowNo
+      "windowNo": _kParamsWindowNo
     };
-    var str = "$secret${configSort(configData)}$secret";
+    var str = "$_kParamsSecret${configSort(configData)}$_kParamsSecret";
     str = md5.convert(Utf8Encoder().convert(str)).toString();
     return str;
   }
 
   // 参数处理
-  static FormData requestParams(params) {
+  static FormData requestParams(params, String path) {
     var formData = params != null ? FormData.fromMap(params) : FormData();
-    if (UserInfo().secret.length > 0) {
-      formData.fields.add(MapEntry("sign", sign(params?["i_platform_id"] ?? 1)));
-    }
-    if (UserInfo().windowNo.length > 0) {
-      formData.fields.add(MapEntry("windowNo", UserInfo().windowNo));
+    if (params != null) {
+      if (_kParamsWindowNo.isNotEmpty) {
+        formData.fields
+            .add(MapEntry("sign", sign(params?["i_platform_id"] ?? 1)));
+        formData.fields.add(MapEntry("windowNo", _kParamsWindowNo));
+      }
     }
     return formData;
   }
@@ -114,10 +120,12 @@ class Request {
       return response.data;
     }
     if (response.data is String) {
-      var val = jsonDecode(response.data);
-      if (val is Map) {
-        return val;
-      }
+      try {
+        var val = jsonDecode(response.data);
+        if (val is Map) {
+          return val;
+        }
+      } catch (e) {}
     }
     return response.data;
   }
@@ -128,11 +136,16 @@ class Request {
     try {
       final isWx = path.contains("wx/");
       final dio = isWx ? _wxDio : _dio;
+      dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (options, handler) {
+          return handler.next(options);
+        },
+      ));
       final options = isWx
           ? Options(method: method)
           : Options(method: method, headers: _headers(path));
       var response = await dio.request('/$path',
-          data: requestParams(params), options: options);
+          data: requestParams(params, path), options: options);
       if (response.statusCode == 200) {
         var data = responseData(response);
         if (!(data is Map)) {
@@ -224,7 +237,40 @@ class Request {
     return message;
   }
 
-  static Future post(String path, {Map<String, dynamic>? params}) {
+  static server() async {
+    if (_kParamsWindowNo.isNotEmpty) {
+      return Future.value();
+    }
+    try {
+      var g = "2";
+      var p =
+          "1060250871334882992391293512479216326438167258746469805890028339770628303789813787064911279666129";
+      var bigIntObj = MyBigInt();
+      var biga = bigIntObj.randBigInt(100, 0);
+      var bigp = bigIntObj.str2bigInt(p, 10, 0);
+      var bigg = bigIntObj.str2bigInt(g, 10, 0);
+      var A = bigIntObj.powMod(bigg, biga, bigp);
+      var strA = bigIntObj.bigInt2str(A, 10);
+      var timestamp = DateTime.now().millisecondsSinceEpoch;
+      var content = Utf8Encoder().convert(timestamp.toString());
+      var windowNo = md5.convert(content).toString();
+
+      var session = await _request("yutang/index.php/bas/Sign/server", 'post',
+          params: {'A': strA, 'windowNo': windowNo});
+
+      var B = bigIntObj.str2bigInt(session["B"], 10, 0);
+      var secret = bigIntObj.powMod(B, biga, bigp);
+      secret = bigIntObj.bigInt2str(secret, 10);
+      secret += ',';
+      _kParamsWindowNo = windowNo;
+      _kParamsSecret = secret;
+    } catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  static Future post(String path, {Map<String, dynamic>? params}) async {
+    await server();
     return _request(path, 'post', params: params);
   }
 

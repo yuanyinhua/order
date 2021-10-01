@@ -4,19 +4,17 @@ import 'dart:math';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 import 'package:task/api/api.dart';
 import 'package:task/tools/error.dart';
 import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
-import 'package:task/models/my_cookies.dart';
 import 'package:task/pages/query_available_page.dart';
 
 import 'package:task/views/alert_dialog.dart';
-import 'package:task/views/loading_widget.dart';
 import 'package:task/views/log_table_widget.dart';
 import 'package:task/views/button_widget.dart';
-import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -25,63 +23,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  @override
-  void initState() {
-    super.initState();
-    _loading();
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (isTiming) {
-        // 执行定时任务
-        var time = DateTime.now();
-        if (time.hour == timingTime.hour &&
-            time.minute == timingTime.minute &&
-            time.second == timingTime.second) {
-          _start();
-          _updateTimingTime();
-        }
-      } else {
-        _updateTimingTime();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    Widget body;
-    if (isLoading) {
-      body = LoadingWidget();
-    } else {
-      body = islogin
-          ? home(context)
-          : LoginPage(() {
-              setState(() {
-                islogin = true;
-                isActive = UserInfo().config.isActive;
-              });
-            });
-    }
-    return Scaffold(
-        body: SafeArea(
-          child: Stack(
-            children: [MyCookies().getToken(() {}), body],
-          ),
-        ),
-        backgroundColor: Color.fromRGBO(191, 191, 190, 1));
-  }
-
-  @override
-  void dispose() {
-    _cancel();
-    timer?.cancel();
-    super.dispose();
-  }
-
-  // 是否登录
-  var islogin = false;
-  // 是否激活
-  var isActive = false;
-  // 是否加载完成
-  var isLoading = true;
   // 是否定时
   bool isTiming = false;
   // 是否运行
@@ -100,8 +41,41 @@ class _HomePageState extends State<HomePage> {
   Timer? timer;
   // 定时时间
   DateTime timingTime = DateTime.now();
-  // 任务处理间隔
-  double delayTime = 1.2;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTasks();
+    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (isTiming) {
+        // 执行定时任务
+        var time = DateTime.now();
+        if (time.hour == timingTime.hour &&
+            time.minute == timingTime.minute &&
+            time.second == timingTime.second) {
+          _start();
+          _updateTimingTime();
+        }
+      } else {
+        _updateTimingTime();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return home(context);
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    timer = null;
+    taskTimer?.cancel();
+    taskTimer = null;
+    super.dispose();
+  }
+
   // 运行任务
   _start() {
     if (!isRun) {
@@ -115,7 +89,8 @@ class _HomePageState extends State<HomePage> {
     if (taskTimer == null) {
       runTask();
       taskTimer = Timer.periodic(
-          Duration(milliseconds: ((delayTime) * 1000).toInt()), (timer) {
+          Duration(milliseconds: ((UserInfo().delayTime) * 1000).toInt()),
+          (timer) {
         runTask();
       });
     }
@@ -137,7 +112,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   _startTiming() {
-    taskTimer?.cancel();
     setState(() {
       isTiming = true;
     });
@@ -179,22 +153,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  // 加载
-  void _loading() async {
-    try {
-      bool isSuccess = await Api.load();
-      setState(() {
-        isLoading = false;
-        islogin = isSuccess;
-        isActive = UserInfo().config.isActive;
-      });
-      _updateTasks();
-    } catch (e) {}
-  }
-
   // 更新任务
   void _updateTasks() {
-    tasks = UserInfo().config.platformAccountDatas;
+    tasks = PlatformAccountData.datasFromString(UserInfo().platformAccount);
     if (isRun) {
       _start();
     }
@@ -211,12 +172,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _logout() {
-    _cancel();
-    _cancelTiming();
-    setState(() {
-      islogin = false;
-    });
+  void _logout() async {
+    UserInfo().isLogin = false;
   }
 
   Widget home(BuildContext context) {
@@ -237,69 +194,65 @@ class _HomePageState extends State<HomePage> {
 
   Widget timeUI() {
     final time = DateFormat("HH:mm:ss").format(timingTime);
-    return Container(
-      height: 60,
-      child: Stack(
-        children: [
-          if (isActive)
-            Column(
-              children: [
-                GestureDetector(
-                  child: SizedBox(
-                    height: 60,
-                    child: Row(
-                      children: [
-                        Text("间隔(秒):$delayTime",
-                            style: TextStyle(
-                                color: Colors.yellow[200], fontSize: 15)),
-                      ],
-                    ),
+    return Consumer<UserInfo>(builder: (context, userInfo, child) {
+      return Container(
+        height: 60,
+        child: Stack(
+          children: [
+            if (userInfo.isActive)
+              GestureDetector(
+                child: SizedBox(
+                  height: 60,
+                  child: Row(
+                    children: [
+                      Text("间隔(秒):${UserInfo().delayTime}",
+                          style: TextStyle(
+                              color: Colors.yellow[200], fontSize: 15)),
+                    ],
                   ),
-                  onTap: () {
-                    if (!isActive) {
+                ),
+                onTap: () {
+                  showAlertDialog(context, "间隔", "秒", (val) {
+                    try {
+                      setState(() {
+                        UserInfo()
+                            .saveConfig(delayTime: max(0.1, double.parse(val)));
+                      });
+                    } catch (e) {}
+                  });
+                },
+              ),
+            Container(
+              height: 60,
+              child: GestureDetector(
+                child: Center(
+                  child: Text(
+                    time,
+                    style: TextStyle(color: Colors.yellow[300], fontSize: 30),
+                  ),
+                ),
+                onTap: () {
+                  showAlertDialog(context, "时间", "时分秒，例如：10:00:00", (value) {
+                    if (value.length == 0) {
                       return;
                     }
-                    showAlertDialog(context, "间隔", "秒", (val) {
-                      try {
-                        setState(() {
-                          delayTime = max(0.1, double.parse(val));
-                        });
-                      } catch (e) {}
-                    });
-                  },
-                ),
-              ],
-            ),
-          Container(
-            height: 60,
-            child: GestureDetector(
-              child: Center(
-                child: Text(
-                  time,
-                  style: TextStyle(color: Colors.yellow[300], fontSize: 30),
-                ),
+                    try {
+                      List<int> times =
+                          value.split(":").map((e) => int.parse(e)).toList();
+                      var time =
+                          DateTime(2021, 9, 12, times[0], times[1], times[2]);
+                      setState(() {
+                        timingTime = time;
+                      });
+                    } catch (e) {}
+                  });
+                },
               ),
-              onTap: () {
-                showAlertDialog(context, "时间", "时分秒，例如：10:00:00", (value) {
-                  if (value.length == 0) {
-                    return;
-                  }
-                  try {
-                    List<int> times =
-                        value.split(":").map((e) => int.parse(e)).toList();
-                    var time =
-                        DateTime(2021, 9, 12, times[0], times[1], times[2]);
-                    setState(() {
-                      timingTime = time;
-                    });
-                  } catch (e) {}
-                });
-              },
-            ),
-          )
-        ],
-      ),
-    );
+            )
+          ],
+        ),
+      );
+    });
   }
 
   Widget buttonsUI() {
@@ -390,12 +343,12 @@ class _HomePageState extends State<HomePage> {
                     height: 45,
                     child: ButtonWidget(
                         onPressed: () {
-                          showAlertDialog(context, "账号", "换行分隔", (value) {
-                            UserInfo().saveConfig(platformAccounts: value);
+                          showAlertDialog(context, "任务id", "换行分隔", (value) {
+                            UserInfo().saveConfig(platformAccount: value);
                             _updateTasks();
                           });
                         },
-                        text: "配置账号"),
+                        text: "配置"),
                   ),
                 ),
               ],

@@ -1,93 +1,92 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config.dart';
 import 'login_info.dart';
 
-class UserInfo {
+class UserInfo extends ChangeNotifier {
   UserInfo._internal();
 
   static final UserInfo _instance = UserInfo._internal();
 
   factory UserInfo() => _instance;
-  //"headimgurl" -> "http://thirdwx.qlogo.cn/mmopen/jRoggJ2RF3AicRexNWO1lthpbDfm5icqKBG9avs0CDlEs49CSIEnzvPza1H5GibemAkmbxpe4LGmBzQpJSFzEFcE4LakSQkzi…"
-  // 1:"location" -> "中国-湖南-长沙"
-  // 2:"nickname" -> "白楚。"
-  // 3:"appid" -> "wx9c76e6c8249f2f1e"
-  // 4:"openid" -> "oDUYJ1eQxfM_cc-tVBZFksTIeUlk"
-  // 5:"state" -> 1
-  Map<String, dynamic>? data;
 
-  String? sceneId;
   LoginInfo? _loginInfo;
-  Config config = Config(
+  Config _config = Config(
       isActive: false,
-      platformAccounts: "",
+      platformAccount: "",
       delayTime: 1.2,
       queryDelayTime: 0.3);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
-  bool get isLogin {
-    return _loginInfo != null;
+  bool _isLogin = false;
+  bool get isLogin => _isLogin;
+  set isLogin(bool val) {
+    _isLogin = val;
+    notifyListeners();
   }
 
+  double get delayTime => _config.delayTime;
+  bool get isActive => _config.isActive;
+  String? get platformAccount => _config.platformAccount;
   // 保存配置信息
   saveConfig(
-      {String? platformAccounts,
+      {String? platformAccount,
       String? activeCode,
       double? delayTime,
       double? queryDelayTime}) {
-    if (platformAccounts != null) {
-      config.platformAccounts = platformAccounts;
+    if (platformAccount != null) {
+      _config.platformAccount = platformAccount;
     }
     if (activeCode != null) {
-      config.isActive = activeCode == "10496${DateTime.now().hour}";
+      _config.isActive = activeCode == "10496${DateTime.now().hour}";
     }
     if (delayTime != null) {
-      config.delayTime = delayTime;
+      _config.delayTime = delayTime;
     }
     if (queryDelayTime != null) {
-      config.queryDelayTime = queryDelayTime;
+      _config.queryDelayTime = queryDelayTime;
     }
-    _prefs!.setString("config", config.toString());
+    _prefs!.setString("config", _config.toString());
   }
 
   // 更新登录信息
   updateLoginInfo(String? cookies, {Map? wechatData, String? activeCode}) {
-    if (activeCode != null) {
-      saveConfig(activeCode: activeCode);
-    }
+    saveConfig(activeCode: activeCode ?? "");
     if (cookies is String && cookies.length > 0) {
       if (!cookies.contains("PHPSESSID")) {
         cookies = "PHPSESSID=;$cookies";
       }
       _loginInfo = LoginInfo(cookies: cookies, weChatData: wechatData);
+      isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
     } else {
+      isLogin = false;
       _loginInfo = null;
       _prefs!.remove("loginInfo");
     }
   }
-
   // 初始化本地缓存
   Future setup() async {
+    if (_prefs != null) {
+      return;
+    }
     try {
       _prefs = await SharedPreferences.getInstance();
       if (_prefs!.getString("loginInfo") != null) {
         _loginInfo = LoginInfo.fromJson(
             json.decode(_prefs!.getString("loginInfo") as String));
+        isLogin = true;
       }
       if (_prefs!.getString("config") != null) {
-        config =
+        _config =
             Config.fromJson(json.decode(_prefs!.getString("config") as String));
       }
     } catch (e) {}
   }
 
-  // 公共参数
-  String secret = "";
-  String windowNo = "";
   String? get cookie => _loginInfo?.cookies;
 }

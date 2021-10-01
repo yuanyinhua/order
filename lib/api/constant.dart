@@ -1,0 +1,2 @@
+const String kBaseUrl = "http://47.115.36.80:8889";
+const String kTestUrl = "$kBaseUrl/tbtools/index.php/com/Login/qrcodeLogin.html?indexUrl=/yutang/&params=%7B%22headimgurl%22%3A%22http%3A%2F%2Fthirdwx.qlogo.cn%2Fmmopen%2FjRoggJ2RF3AicRexNWO1lthpbDfm5icqKBG9avs0CDlEs49CSIEnzvPza1H5GibemAkmbxpe4LGmBzQpJSFzEFcE4LakSQkziaW1%2F132%22%2C%22location%22%3A%22%E4%B8%AD%E5%9B%BD-%E6%B9%96%E5%8D%97-%E9%95%BF%E6%B2%99%22%2C%22nickname%22%3A%22%E7%99%BD%E6%A5%9A%E3%80%82%22%2C%22appid%22%3A%22wx9c76e6c8249f2f1e%22%2C%22openid%22%3A%22oDUYJ1eQxfM_cc-tVBZFksTIeUlk%22%7D";

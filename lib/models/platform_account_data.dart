@@ -34,15 +34,8 @@ class PlatformAccountData {
   // 平台id
   AccountPlatform platform = AccountPlatform.taobao;
   PlatformAccountData({required this.name});
-}
 
-class PlatformAccountLog {
-  // 任务
-  PlatformAccountData accountData;
-  String? log;
-  PlatformAccountLog({required this.accountData, this.log});
-
-    // 当前平台账号
+   // 当前平台账号
   static List<PlatformAccountData> datasFromString(String? value)  {
     if (value == null || value == "") {
       return [];
@@ -53,4 +46,11 @@ class PlatformAccountLog {
         .toList();
     return datas;
   }
+}
+
+class PlatformAccountLog {
+  // 任务
+  PlatformAccountData accountData;
+  String? log;
+  PlatformAccountLog({required this.accountData, this.log});
 }
