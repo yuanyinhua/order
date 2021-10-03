@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:task/api/constant.dart';
@@ -16,13 +17,8 @@ class MyWebViewManager {
 
   bool _finished = false;
 
-  Widget? _cache;
-
   Widget initWebView() {
-    if (_cache != null) {
-      return _cache!;
-    }
-    _cache = Visibility(
+    return Visibility(
         visible: false,
         maintainState: true,
         child: WebView(
@@ -31,23 +27,43 @@ class MyWebViewManager {
           onWebViewCreated: (WebViewController webViewController) {
             _controller = webViewController;
           },
+          onPageStarted: (url) {
+
+          },
+          javascriptChannels: [
+            JavascriptChannel(
+                name: 'tudouApp', //handleName
+                onMessageReceived: (JavascriptMessage message) {
+                }),
+            JavascriptChannel(
+                name: 'JSHandle', //handleName
+                onMessageReceived: (JavascriptMessage message) {
+                }),
+          ].toSet(),
           javascriptMode: JavascriptMode.unrestricted,
-          onPageFinished: (_) {
+          onPageFinished: (url) async {
             _finished = true;
           },
         ));
-    return _cache!;
   }
 
   Future getCookie({Map? wechatData}) async {
-    if (wechatData != null) {
-      String params = Uri.encodeComponent(json.encode(wechatData));
-      String url = "$kBaseUrl/tbtools/index.php/com/Login/qrcodeLogin.html?indexUrl=/yutang/&params=$params";
-      await loadUrl(url);
-    } else {
-      await loadUrl(kTestUrl);
+    try {
+      if (null != wechatData) {
+        String params = Uri.encodeComponent(json.encode(wechatData));
+        String url =
+            "$kBaseUrl/tbtools/index.php/com/Login/qrcodeLogin.html?indexUrl=/yutang/&params=$params";
+        await loadUrl(url);
+      } else {
+        if (kDebugMode) {
+          await loadUrl(kTestUrl);
+        }
+      }
+      var ret = await _controller!.evaluateJavascript("document.cookie");
+      print(ret);
+    } catch (e) {
+      print(e);
     }
-    return await _controller!.evaluateJavascript("document.cookie");
   }
 
   Future loadUrl(String url) async {

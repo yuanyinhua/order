@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task/views/my_toast.dart';
 
 import 'config.dart';
 import 'login_info.dart';
@@ -60,6 +61,10 @@ class UserInfo extends ChangeNotifier {
       if (!cookies.contains("PHPSESSID")) {
         cookies = "PHPSESSID=;$cookies";
       }
+      if (!cookies.contains("tbtools")) {
+        MyToast.showToast("登录信息不正确");
+        return;
+      }
       _loginInfo = LoginInfo(cookies: cookies, weChatData: wechatData);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
@@ -69,6 +74,7 @@ class UserInfo extends ChangeNotifier {
       _prefs!.remove("loginInfo");
     }
   }
+
   // 初始化本地缓存
   Future setup() async {
     if (_prefs != null) {

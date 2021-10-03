@@ -86,7 +86,7 @@ class Request {
     return str.toString().replaceAll("[^a-zA-Z0-9]", "");
   }
 
-  static String sign(dynamic platform) {
+  static String _sign(dynamic platform) {
     var configData = {
       "filter": {
         "i_addorder_mode": 1,
@@ -103,19 +103,19 @@ class Request {
   }
 
   // 参数处理
-  static FormData requestParams(params, String path) {
+  static FormData _requestParams(params, String path) {
     var formData = params != null ? FormData.fromMap(params) : FormData();
     if (params != null) {
       if (_kParamsWindowNo.isNotEmpty) {
         formData.fields
-            .add(MapEntry("sign", sign(params?["i_platform_id"] ?? 1)));
+            .add(MapEntry("sign", _sign(params?["i_platform_id"] ?? 1)));
         formData.fields.add(MapEntry("windowNo", _kParamsWindowNo));
       }
     }
     return formData;
   }
 
-  static dynamic responseData(Response response) {
+  static dynamic _responseData(Response response) {
     if (response.data is Map) {
       return response.data;
     }
@@ -145,9 +145,9 @@ class Request {
           ? Options(method: method)
           : Options(method: method, headers: _headers(path));
       var response = await dio.request('/$path',
-          data: requestParams(params, path), options: options);
+          data: _requestParams(params, path), options: options);
       if (response.statusCode == 200) {
-        var data = responseData(response);
+        var data = _responseData(response);
         if (!(data is Map)) {
           return data;
         }

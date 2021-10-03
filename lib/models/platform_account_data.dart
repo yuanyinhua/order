@@ -42,6 +42,7 @@ class PlatformAccountData {
     }
     List<PlatformAccountData> datas = value
         .split("\n")
+        .where((e) => e.isNotEmpty)
         .map((e) => PlatformAccountData(name: e.trim()))
         .toList();
     return datas;

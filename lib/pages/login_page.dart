@@ -44,20 +44,12 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // 获取二维码内容
-    _getQrCodeData = Future.delayed(Duration(seconds: 1), () async {
-      var response = await Api.qrCodeData();
-      setState(() {
-        _qrCode = response as String;
-      });
-      _waitLogin();
-      return _qrCode!;
-    });
   }
 
   @override
   void dispose() {
     timer?.cancel();
+    _getQrCodeData = null;
     super.dispose();
   }
 
@@ -102,10 +94,6 @@ class _LoginPageState extends State<LoginPage> {
                 onPressed: () {
                   if (token.text.length == 0) {
                     MyToast.showToast("输入登录信息");
-                    return;
-                  }
-                  if (!token.text.contains("tbtools")) {
-                    MyToast.showToast("登录信息不正确");
                     return;
                   }
                   _login(token.text);
@@ -161,6 +149,7 @@ class _LoginPageState extends State<LoginPage> {
           onTap: () {
             setState(() {
               _isWechatLogin = !_isWechatLogin;
+              _isWechatLogin ? _waitLogin() : _stopWaitLogin();
             });
           },
         ),
@@ -170,10 +159,22 @@ class _LoginPageState extends State<LoginPage> {
 
   // 等待扫一扫
   void _waitLogin() async {
+    if (_getQrCodeData == null) {
+      // 获取二维码内容
+      _getQrCodeData = Future.delayed(Duration(seconds: 0), () async {
+        var response = await Api.qrCodeData();
+        setState(() {
+          _qrCode = response as String;
+        });
+        _waitLogin();
+        return _qrCode!;
+      });
+      return;
+    }
     if (timer == null) {
       timer = Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
           (timer) async {
-        if (!_isWechatLogin) {
+        if (!_isWechatLogin || !this.mounted) {
           return;
         }
         try {
@@ -204,21 +205,33 @@ class _LoginPageState extends State<LoginPage> {
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
         if (snapshot.hasData) {
           return GestureDetector(
-            onLongPress: () async {
-              // 访问权限
-              var status = await Permission.storage.status;
-              if (!status.isGranted) {
-                status = await Permission.storage.request();
-                return;
+            onTap: () {
+              if (kDebugMode) {
+                MyWebViewManager().getCookie();
               }
-              // 保存图片
-              RenderRepaintBoundary boundary = _globalKey.currentContext!
-                  .findRenderObject() as RenderRepaintBoundary;
-              ui.Image image = await boundary.toImage(pixelRatio: 0);
-              ByteData byteData = await image.toByteData(
-                  format: ui.ImageByteFormat.png) as ByteData;
-              await ImageGallerySaver.saveImage(byteData.buffer.asUint8List());
-              launch('weixin://');
+            },
+            onLongPress: () async {
+              try {
+                // 添加图片权限
+                var status = await Permission.storage.status;
+                if (!status.isGranted) {
+                  status = await Permission.storage.request();
+                  return;
+                }
+                // 生成图片
+                RenderRepaintBoundary boundary = _globalKey.currentContext!
+                    .findRenderObject() as RenderRepaintBoundary;
+                ui.Image image = await boundary.toImage(pixelRatio: 3);
+                ByteData byteData = await image.toByteData(
+                    format: ui.ImageByteFormat.png) as ByteData;
+                // 保存图片
+                await ImageGallerySaver.saveImage(
+                    byteData.buffer.asUint8List());
+                // 打开微信
+                launch('weixin://');
+              } catch (e) {
+                MyToast.showToast(e.toString());
+              }
             },
             child: RepaintBoundary(
               key: _globalKey,

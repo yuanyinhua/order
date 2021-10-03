@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
   // 处理定时
   Timer? timer;
   // 定时时间
-  DateTime timingTime = DateTime.now();
+  DateTime timingTime = DateTime(2021, 10, 2, DateTime.now().hour + 1, 0, 0);
 
   @override
   void initState() {
@@ -164,7 +164,7 @@ class _HomePageState extends State<HomePage> {
   // 更新定时时间
   void _updateTimingTime() {
     var time = DateTime.now();
-    var tempTime = DateTime(2021, 9, 12, time.hour + 1, 0, 0);
+    var tempTime = DateTime(time.year, time.month, time.day, time.hour + 1, 0, 0);
     if (tempTime.hour != timingTime.hour) {
       setState(() {
         timingTime = tempTime;
