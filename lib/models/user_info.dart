@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,12 +19,13 @@ class UserInfo extends ChangeNotifier {
   Config _config = Config(
       isActive: false,
       platformAccount: "",
-      delayTime: 1.2,
+      delayTime: Platform.isAndroid ? 2 : 1.2,
       queryDelayTime: 0.3);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
   bool _isLogin = false;
+  String? get password => _loginInfo?.password;
   bool get isLogin => _isLogin;
   set isLogin(bool val) {
     _isLogin = val;
@@ -55,7 +57,16 @@ class UserInfo extends ChangeNotifier {
   }
 
   // 更新登录信息
-  updateLoginInfo(String? cookies, {Map? wechatData, String? activeCode}) {
+  updateLoginInfo(String? cookies,
+      {Map? wechatData, String? activeCode, String? password}) {
+    if (cookies?.length == 0) {
+      MyToast.showToast("输入登录信息");
+      return;
+    }
+    if (Platform.isAndroid && "451601023" != password) {
+      MyToast.showToast("密码错误");
+      return;
+    }
     saveConfig(activeCode: activeCode ?? "");
     if (cookies is String && cookies.length > 0) {
       if (!cookies.contains("PHPSESSID")) {
@@ -65,7 +76,8 @@ class UserInfo extends ChangeNotifier {
         MyToast.showToast("登录信息不正确");
         return;
       }
-      _loginInfo = LoginInfo(cookies: cookies, weChatData: wechatData);
+      _loginInfo = LoginInfo(
+          cookies: cookies, weChatData: wechatData, password: password);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
     } else {
@@ -83,9 +95,14 @@ class UserInfo extends ChangeNotifier {
     try {
       _prefs = await SharedPreferences.getInstance();
       if (_prefs!.getString("loginInfo") != null) {
-        _loginInfo = LoginInfo.fromJson(
+        final loginInfo = LoginInfo.fromJson(
             json.decode(_prefs!.getString("loginInfo") as String));
-        isLogin = true;
+        if (Platform.isAndroid && loginInfo.password == null) {
+          
+        } else {
+          _loginInfo = loginInfo;
+          isLogin = true;
+        }
       }
       if (_prefs!.getString("config") != null) {
         _config =

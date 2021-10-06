@@ -24,10 +24,19 @@ class _RootPageState extends State<RootPage> {
     super.initState();
   }
 
+void hiddenKeyword() {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+        if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
+          FocusManager.instance.primaryFocus!.unfocus();
+        }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: SafeArea(
+        resizeToAvoidBottomInset:false,
+        body: GestureDetector(
+          child: SafeArea(
           child: FutureBuilder(
             future: _loading,
             builder: (context, snapshot) {
@@ -40,6 +49,7 @@ class _RootPageState extends State<RootPage> {
               return userInfo.isLogin ? HomePage() : LoginPage();
             });
           }),
+        ),
         ),
         backgroundColor: Color.fromRGBO(191, 191, 190, 1));
   }

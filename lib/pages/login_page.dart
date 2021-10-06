@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:ui' as ui;
@@ -26,7 +27,7 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   _LoginPageState();
   // 扫码结果
   String? _qrCode;
@@ -41,15 +42,20 @@ class _LoginPageState extends State<LoginPage> {
 
   int _waitScanReqCount = 0;
   final _waitScanreqCountMax = 100;
+
+  bool isShowKeyword = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance?.addObserver(this);
   }
 
   @override
   void dispose() {
     timer?.cancel();
     _getQrCodeData = null;
+    WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
   }
 
@@ -60,9 +66,21 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  @override
+  void didChangeMetrics() {
+    super.didChangeMetrics();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      setState(() {
+        isShowKeyword = MediaQuery.of(context).viewInsets.bottom != 0;
+      });
+    });
+  }
+
   Widget _mainUI(BuildContext context) {
     final token = TextEditingController();
+    final password = TextEditingController();
     token.text = UserInfo().cookie ?? "";
+    password.text = UserInfo().password ?? "";
     if (_isWechatLogin) {
       return Container(
         margin: EdgeInsets.only(left: 20, right: 20, top: 200),
@@ -76,46 +94,47 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
-    return Container(
-      margin: EdgeInsets.only(left: 20, right: 20, top: 200),
-      child: Column(
-        children: [
-          TextField(
-            obscureText: true,
-            decoration: InputDecoration(hintText: "输入登录信息"),
-            controller: token,
-          ),
-          Container(
-            margin: EdgeInsets.only(top: 20, bottom: 10),
-            child: SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (token.text.length == 0) {
-                    MyToast.showToast("输入登录信息");
-                    return;
-                  }
-                  _login(token.text);
-                },
-                child: Text("登录", style: TextStyle(color: Colors.black87)),
-                style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(
-                        Color.fromRGBO(208, 208, 208, 1))),
+    return GestureDetector(
+      child: Container(
+        margin: EdgeInsets.only(left: 20, right: 20, top: isShowKeyword ? 150 : 200),
+        child: Column(
+          children: [
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(hintText: "输入登录信息"),
+              controller: token,
+            ),
+            Container(
+              height: 10,
+            ),
+            if (Platform.isAndroid)
+              TextField(
+                obscureText: true,
+                decoration: InputDecoration(hintText: "输入密码"),
+                controller: token,
+              ),
+            Container(
+              margin: EdgeInsets.only(top: 20, bottom: 10),
+              child: SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: () {
+                    UserInfo().updateLoginInfo(token.text,
+                        activeCode: _activeInfo, password: password.text);
+                  },
+                  child: Text("登录", style: TextStyle(color: Colors.black87)),
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(
+                          Color.fromRGBO(208, 208, 208, 1))),
+                ),
               ),
             ),
-          ),
-          _buttonUI(context),
-        ],
+            _buttonUI(context),
+          ],
+        ),
       ),
     );
-  }
-
-  // 登录
-  void _login(String token) async {
-    try {
-      UserInfo().updateLoginInfo(token, activeCode: _activeInfo);
-    } catch (e) {}
   }
 
   Widget _buttonUI(BuildContext context) {

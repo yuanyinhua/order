@@ -14,7 +14,10 @@ class LoginInfo {
   // 4:"openid" -> "oDUYJ1eQxfM_cc-tVBZFksTIeUlk"
   // 5:"state" -> 1
   Map? weChatData;
-  LoginInfo({required this.cookies, this.weChatData});
+
+  String? password;
+
+  LoginInfo({required this.cookies, this.weChatData, this.password});
 
   factory LoginInfo.fromJson(Map<String, dynamic> json) => _$LoginInfoFromJson(json);
 
@@ -26,10 +29,12 @@ class LoginInfo {
 
 LoginInfo _$LoginInfoFromJson(Map<String, dynamic> json) => LoginInfo(
   cookies: json['cookies'] as String,
-  weChatData: json['weChatData'] == null ? null : json['weChatData'] as Map
+  weChatData: json['weChatData'] == null ? null : json['weChatData'] as Map,
+  password: json['password']
 );
 
 Map<String, dynamic> _$LoginInfoToJson(LoginInfo instance) => <String, dynamic>{
   'cookies': instance.cookies,
-  'weChatData': instance.weChatData
+  'weChatData': instance.weChatData,
+  'password': instance.password
 };
