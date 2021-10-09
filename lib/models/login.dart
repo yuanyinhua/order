@@ -5,7 +5,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'login.g.dart';
 
 @JsonSerializable()
-class Login {
+class LoginInfo {
   // 登录后获取，调接口有用
   String cookies;
   // 微信扫码数据
@@ -19,9 +19,9 @@ class Login {
 
   String? password;
 
-  Login({required this.cookies, this.weChatData, this.password});
+  LoginInfo({required this.cookies, this.weChatData, this.password});
 
-  factory Login.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
+  factory LoginInfo.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
 
   @override
   String toString() {

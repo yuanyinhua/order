@@ -15,7 +15,7 @@ class UserInfo extends ChangeNotifier {
 
   factory UserInfo() => _instance;
 
-  Login? _loginInfo;
+  LoginInfo? _loginInfo;
   Config _config = Config(
       isActive: false,
       platformAccount: "",
@@ -35,6 +35,8 @@ class UserInfo extends ChangeNotifier {
   double get delayTime => _config.delayTime;
   bool get isActive => _config.isActive;
   String? get platformAccount => _config.platformAccount;
+
+  String? get cookie => _loginInfo?.cookies;
   // 保存配置信息
   saveConfig(
       {String? platformAccount,
@@ -76,7 +78,7 @@ class UserInfo extends ChangeNotifier {
         MyToast.showToast("登录信息不正确");
         return;
       }
-      _loginInfo = Login(
+      _loginInfo = LoginInfo(
           cookies: cookies, weChatData: wechatData as Map<String, dynamic>, password: password);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
@@ -93,23 +95,21 @@ class UserInfo extends ChangeNotifier {
       return;
     }
     try {
-      _prefs = await SharedPreferences.getInstance();
-      if (_prefs!.getString("loginInfo") != null) {
-        final loginInfo = Login.fromJson(
-            json.decode(_prefs!.getString("loginInfo") as String));
-        if (Platform.isAndroid && loginInfo.password == null) {
-          
-        } else {
+      var prefs = await SharedPreferences.getInstance();
+      _prefs = prefs;
+      if (prefs.getString("loginInfo") != null) {
+        final loginInfo = LoginInfo.fromJson(
+            json.decode(prefs.getString("loginInfo") as String));
+        if (!(Platform.isAndroid && loginInfo.password == null)) {
           _loginInfo = loginInfo;
           isLogin = true;
         }
       }
-      if (_prefs!.getString("config") != null) {
+      if (prefs.getString("config") != null) {
         _config =
-            Config.fromJson(json.decode(_prefs!.getString("config") as String));
+            Config.fromJson(json.decode(prefs.getString("config") as String));
       }
     } catch (e) {}
   }
 
-  String? get cookie => _loginInfo?.cookies;
 }

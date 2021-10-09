@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   _LoginPageState();
   // 扫码结果
   String? _qrCode;
-  // 是否微信登录
+  // 是否微信登录:
   bool _isWechatLogin = false;
   // 激活信息
   String _activeInfo = "";
