@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task/views/my_toast.dart';
 
 import 'config.dart';
-import 'login_info.dart';
+import 'login.dart';
 
 class UserInfo extends ChangeNotifier {
   UserInfo._internal();
@@ -15,7 +15,7 @@ class UserInfo extends ChangeNotifier {
 
   factory UserInfo() => _instance;
 
-  LoginInfo? _loginInfo;
+  Login? _loginInfo;
   Config _config = Config(
       isActive: false,
       platformAccount: "",
@@ -76,8 +76,8 @@ class UserInfo extends ChangeNotifier {
         MyToast.showToast("登录信息不正确");
         return;
       }
-      _loginInfo = LoginInfo(
-          cookies: cookies, weChatData: wechatData, password: password);
+      _loginInfo = Login(
+          cookies: cookies, weChatData: wechatData as Map<String, dynamic>, password: password);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
     } else {
@@ -95,7 +95,7 @@ class UserInfo extends ChangeNotifier {
     try {
       _prefs = await SharedPreferences.getInstance();
       if (_prefs!.getString("loginInfo") != null) {
-        final loginInfo = LoginInfo.fromJson(
+        final loginInfo = Login.fromJson(
             json.decode(_prefs!.getString("loginInfo") as String));
         if (Platform.isAndroid && loginInfo.password == null) {
           

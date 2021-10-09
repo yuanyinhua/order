@@ -188,10 +188,8 @@ class Request {
         return "服务器异常，请稍后重试！";
       case DioErrorType.cancel:
         return "请求已被取消，请重新请求";
-      case DioErrorType.other:
-        return "其它错误";
       default:
-        return "其它错误";
+        return error.message;
     }
   }
 

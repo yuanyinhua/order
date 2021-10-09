@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:intl/intl.dart';
@@ -39,6 +40,8 @@ class _HomePageState extends State<HomePage> {
   Timer? taskTimer;
   // 处理定时
   Timer? timer;
+  
+  int runTime = 0;
   // 定时时间
   DateTime timingTime = DateTime(2021, 10, 2, DateTime.now().hour + 1, 0, 0);
 
@@ -47,6 +50,10 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _updateTasks();
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      runTime ++;
+      if (Platform.isAndroid) {
+        print("后台运行时间：$runTime");
+      }
       if (isTiming) {
         // 执行定时任务
         var time = DateTime.now();

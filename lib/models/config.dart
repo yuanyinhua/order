@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:json_annotation/json_annotation.dart';
 
+part 'config.g.dart';
+
 @JsonSerializable()
 class Config {
   // 是否激活
@@ -26,16 +28,3 @@ class Config {
     return json.encode(_$ConfigToJson(this));
   }
 }
-
-Config _$ConfigFromJson(Map<String, dynamic> json) => Config(
-    isActive: json['isActive'] as bool,
-    platformAccount: json['platformAccount'],
-    delayTime: json['delayTime'],
-    queryDelayTime: json['queryDelayTime']);
-
-Map<String, dynamic> _$ConfigToJson(Config instance) => <String, dynamic>{
-      'isActive': instance.isActive,
-      'platformAccount': instance.platformAccount,
-      'delayTime': instance.delayTime,
-      'queryDelayTime': instance.queryDelayTime
-    };

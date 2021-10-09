@@ -22,6 +22,11 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAllowsArbitraryLoads</key>
@@ -32,6 +37,8 @@
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>允许使用</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>保存二维码，微信登录扫描选择使用</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
@@ -59,12 +66,5 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>https</string>
-		<string>http</string>
-	</array>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>保存二维码，微信登录扫描选择使用</string>
 </dict>
 </plist>

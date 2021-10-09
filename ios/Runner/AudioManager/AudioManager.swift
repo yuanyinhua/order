@@ -132,9 +132,6 @@ class AudioManager: NSObject, AVAudioPlayerDelegate
     @objc private func timerRun(timer: Timer) {
         self.backgroundTimeInterval += 1
         print("后台活跃时间（秒）：\(self.backgroundTimeInterval)")
-        if self.backgroundTimeInterval > 180 {
-            self.stopBackMode()
-        }
     }
     
     // MARK: 退出后台常驻模式

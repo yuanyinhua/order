@@ -45,6 +45,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   bool isShowKeyword = false;
 
+  final token = TextEditingController();
+  final password = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -77,8 +80,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
   Widget _mainUI(BuildContext context) {
-    final token = TextEditingController();
-    final password = TextEditingController();
     token.text = UserInfo().cookie ?? "";
     password.text = UserInfo().password ?? "";
     if (_isWechatLogin) {
@@ -111,7 +112,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               TextField(
                 obscureText: true,
                 decoration: InputDecoration(hintText: "输入密码"),
-                controller: token,
+                controller: password,
               ),
             Container(
               margin: EdgeInsets.only(top: 20, bottom: 10),
