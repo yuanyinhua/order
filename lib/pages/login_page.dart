@@ -38,15 +38,15 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   Future<String>? _getQrCodeData;
 
-  Timer? timer;
+  Timer? _timer;
 
   int _waitScanReqCount = 0;
   final _waitScanreqCountMax = 100;
 
-  bool isShowKeyword = false;
+  bool _isShowKeyword = false;
 
-  final token = TextEditingController();
-  final password = TextEditingController();
+  final _token = TextEditingController();
+  final _password = TextEditingController();
 
   @override
   void initState() {
@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    timer?.cancel();
+    _timer?.cancel();
     _getQrCodeData = null;
     WidgetsBinding.instance?.removeObserver(this);
     super.dispose();
@@ -74,14 +74,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     super.didChangeMetrics();
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       setState(() {
-        isShowKeyword = MediaQuery.of(context).viewInsets.bottom != 0;
+        _isShowKeyword = MediaQuery.of(context).viewInsets.bottom != 0;
       });
     });
   }
 
   Widget _mainUI(BuildContext context) {
-    token.text = UserInfo().cookie ?? "";
-    password.text = UserInfo().password ?? "";
+    _token.text = UserInfo().cookie ?? "";
+    _password.text = UserInfo().password ?? "";
     if (_isWechatLogin) {
       return Container(
         margin: EdgeInsets.only(left: 20, right: 20, top: 200),
@@ -97,13 +97,13 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     }
     return GestureDetector(
       child: Container(
-        margin: EdgeInsets.only(left: 20, right: 20, top: isShowKeyword ? 150 : 200),
+        margin: EdgeInsets.only(left: 20, right: 20, top: _isShowKeyword ? 150 : 200),
         child: Column(
           children: [
             TextField(
               obscureText: true,
               decoration: InputDecoration(hintText: "输入登录信息"),
-              controller: token,
+              controller: _token,
             ),
             Container(
               height: 10,
@@ -112,7 +112,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               TextField(
                 obscureText: true,
                 decoration: InputDecoration(hintText: "输入密码"),
-                controller: password,
+                controller: _password,
               ),
             Container(
               margin: EdgeInsets.only(top: 20, bottom: 10),
@@ -121,8 +121,8 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 height: 45,
                 child: ElevatedButton(
                   onPressed: () {
-                    UserInfo().updateLoginInfo(token.text,
-                        activeCode: _activeInfo, password: password.text);
+                    UserInfo().updateLoginInfo(_token.text,
+                        activeCode: _activeInfo, password: _password.text);
                   },
                   child: Text("登录", style: TextStyle(color: Colors.black87)),
                   style: ButtonStyle(
@@ -191,8 +191,8 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       });
       return;
     }
-    if (timer == null) {
-      timer = Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
+    if (_timer == null) {
+      _timer = Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
           (timer) async {
         if (!_isWechatLogin || !this.mounted) {
           return;
@@ -213,8 +213,8 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
   void _stopWaitLogin() {
-    timer?.cancel();
-    timer = null;
+    _timer?.cancel();
+    _timer = null;
   }
 
   // 获取二维码UI
@@ -267,5 +267,10 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
         }
       },
     );
+  }
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<bool>('isShowKeyword', _isShowKeyword));
   }
 }

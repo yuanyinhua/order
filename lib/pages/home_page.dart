@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math';
 
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import 'package:task/api/api.dart';
-import 'package:task/tools/error.dart';
 import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
 import 'package:task/pages/query_available_page.dart';
@@ -51,9 +48,6 @@ class _HomePageState extends State<HomePage> {
     _updateTasks();
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       runTime ++;
-      if (Platform.isAndroid) {
-        print("后台运行时间：$runTime");
-      }
       if (isTiming) {
         // 执行定时任务
         var time = DateTime.now();
@@ -151,11 +145,7 @@ class _HomePageState extends State<HomePage> {
       complete(value);
       completeTasks.add(task);
     }).onError((error, stackTrace) {
-      if (error is MError && error.code == -1) {
-        completeTasks.add(task);
-      } else {
-        waitTasks.add(task);
-      }
+      waitTasks.add(task);
       complete(error.toString());
     });
   }
@@ -206,7 +196,6 @@ class _HomePageState extends State<HomePage> {
         height: 60,
         child: Stack(
           children: [
-            if (userInfo.isActive)
               GestureDetector(
                 child: SizedBox(
                   height: 60,
@@ -221,10 +210,7 @@ class _HomePageState extends State<HomePage> {
                 onTap: () {
                   showAlertDialog(context, "间隔", "秒", (val) {
                     try {
-                      setState(() {
-                        UserInfo()
-                            .saveConfig(delayTime: max(0.1, double.parse(val)));
-                      });
+                      UserInfo().saveConfig(delayTime: double.parse(val));
                     } catch (e) {}
                   });
                 },

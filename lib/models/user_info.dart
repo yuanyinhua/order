@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:task/api/api.dart';
 import 'package:task/views/my_toast.dart';
 
 import 'config.dart';
@@ -17,10 +19,10 @@ class UserInfo extends ChangeNotifier {
 
   LoginInfo? _loginInfo;
   Config _config = Config(
-      isActive: false,
-      platformAccount: "",
-      delayTime: Platform.isAndroid ? 2 : 1.2,
-      queryDelayTime: 0.3);
+            isActive: false,
+            platformAccount: "",
+            delayTime: 0.5,
+            queryDelayTime: 0.3);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
@@ -33,6 +35,9 @@ class UserInfo extends ChangeNotifier {
   }
 
   double get delayTime => _config.delayTime;
+
+  double _defaultDelayTime = Platform.isAndroid ? 2 : 1.2;
+
   bool get isActive => _config.isActive;
   String? get platformAccount => _config.platformAccount;
 
@@ -47,10 +52,11 @@ class UserInfo extends ChangeNotifier {
       _config.platformAccount = platformAccount;
     }
     if (activeCode != null) {
-      _config.isActive = activeCode == "10496${DateTime.now().hour}";
+      _config.isActive = (activeCode == "10496${DateTime.now().hour}");
     }
     if (delayTime != null) {
-      _config.delayTime = delayTime;
+      _config.delayTime = max(_defaultDelayTime, delayTime);
+      notifyListeners();
     }
     if (queryDelayTime != null) {
       _config.queryDelayTime = queryDelayTime;
@@ -69,6 +75,7 @@ class UserInfo extends ChangeNotifier {
       MyToast.showToast("密码错误");
       return;
     }
+    Api.updateConfig();
     saveConfig(activeCode: activeCode ?? "");
     if (cookies is String && cookies.length > 0) {
       if (!cookies.contains("PHPSESSID")) {
@@ -79,7 +86,9 @@ class UserInfo extends ChangeNotifier {
         return;
       }
       _loginInfo = LoginInfo(
-          cookies: cookies, weChatData: wechatData as Map<String, dynamic>, password: password);
+          cookies: cookies,
+          weChatData: wechatData as Map<String, dynamic>?,
+          password: password);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
     } else {
@@ -91,9 +100,6 @@ class UserInfo extends ChangeNotifier {
 
   // 初始化本地缓存
   Future setup() async {
-    if (_prefs != null) {
-      return;
-    }
     try {
       var prefs = await SharedPreferences.getInstance();
       _prefs = prefs;
@@ -108,8 +114,25 @@ class UserInfo extends ChangeNotifier {
       if (prefs.getString("config") != null) {
         _config =
             Config.fromJson(json.decode(prefs.getString("config") as String));
+      } else {
+        _config.delayTime = _defaultDelayTime;
       }
+      return true;
     } catch (e) {}
   }
 
+  updateConfig(Map data) {
+    try {
+      if (Platform.isAndroid) {
+         _defaultDelayTime = (data["android"]["delayTime"] as num).toDouble();
+      } else {
+        _defaultDelayTime = (data["delayTime"] as num).toDouble();
+      }
+      if (_defaultDelayTime > delayTime) {
+        saveConfig(delayTime: _defaultDelayTime);
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
 }

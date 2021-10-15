@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:html/parser.dart' show parse;
 
 import 'package:task/models/my_webView_manager.dart';
@@ -6,27 +7,33 @@ import 'package:task/tools/error.dart';
 import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
 import 'request.dart';
+import 'package:dio/dio.dart';
 
 String? _kParamsSceneId;
 
 class Api {
   static Future<String> createOrder(PlatformAccountData task) async {
     try {
-      var response = await _search(task);
-      List list = response["list"];
+      var response1 = await _search(task);
+      List datas = response1["list"];
+      if (!(datas is List) || (datas is List && datas.isEmpty)) {
+        return Future.error("预约失败");
+      }
+      Map data = datas[Random().nextInt(datas.length)];
       Map<String, dynamic> params = {
-        'c_gender': response["c_gender"],
+        'c_gender': response1["c_gender"],
         'c_platform': task.platform.name,
         'c_vip_code': task.name,
-        'i_job_id': list[0]["i_job_id"],
-        'i_shop_id': list[0]["i_shop_id"],
+        'i_job_id': data["i_job_id"],
+        'i_shop_id': data["i_shop_id"],
         'path': ["job", "desktopVip"],
         'i_platform_id': task.name
       };
-      var data = await Request.post("yutang/index.php/index/Order/addOrder",
+      var response2 = await Request.post(
+          "yutang/index.php/index/Order/addOrder",
           params: params);
-      jsonDecode(data);
-      return "预约成功;${list[0]["c_name"]}${list[0]["c_shop_name"]}";
+      jsonDecode(response2);
+      return "预约成功;${data["c_name"]}${data["c_shop_name"]}";
     } on MError catch (e) {
       return Future.error(e);
     } catch (e) {
@@ -94,11 +101,28 @@ class Api {
           params: {"sceneid": _kParamsSceneId});
       if (response is Map) {
         var cookies = await MyWebViewManager().getCookie(wechatData: response);
-        UserInfo().updateLoginInfo(cookies, wechatData: response, activeCode: "");
+        UserInfo()
+            .updateLoginInfo(cookies, wechatData: response, activeCode: "");
         return Future.value();
       }
     } catch (e) {
       return Future.error(e);
     }
+  }
+
+  static updateConfig() async {
+    try {
+      var response = await Dio()
+          .get('https://github.com/baichu123/config/blob/main/config.json');
+      if (response.statusCode == 200) {
+        var document = parse(response.data);
+        var text = document.getElementsByTagName("table")[0].text.trim();
+        UserInfo().updateConfig(jsonDecode(text));
+      } else {
+        Future.delayed(Duration(seconds: 1 * 60)).then((value) {
+          updateConfig();
+        });
+      }
+    } catch (_) {}
   }
 }
