@@ -10,9 +10,9 @@ import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
 import 'package:task/pages/query_available_page.dart';
 
-import 'package:task/views/alert_dialog.dart';
-import 'package:task/views/log_table_widget.dart';
-import 'package:task/views/button_widget.dart';
+import 'package:task/components/alert_dialog.dart';
+import 'package:task/pages/log_table_widget.dart';
+import 'package:task/components/button_widget.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -208,11 +208,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onTap: () {
-                  showAlertDialog(context, "间隔", "秒", (val) {
+                  showAlertDialog(context, "间隔", (val) {
                     try {
                       UserInfo().saveConfig(delayTime: double.parse(val));
                     } catch (e) {}
-                  });
+                  }, placeholder: "秒");
                 },
               ),
             Container(
@@ -225,7 +225,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 onTap: () {
-                  showAlertDialog(context, "时间", "时分秒，例如：10:00:00", (value) {
+                  showAlertDialog(context, "时间", (value) {
                     if (value.length == 0) {
                       return;
                     }
@@ -238,7 +238,7 @@ class _HomePageState extends State<HomePage> {
                         timingTime = time;
                       });
                     } catch (e) {}
-                  });
+                  }, placeholder: "时分秒，例如：10:00:00");
                 },
               ),
             )
@@ -249,106 +249,110 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buttonsUI() {
-    return Container(
-      margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
-      height: 160,
-      child: Column(
-        children: [
-          timeUI(),
-          Container(
-            child: Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    width: double.maxFinite,
-                    height: 45,
-                    child: ButtonWidget(
-                        onPressed: isTiming ? _cancelTiming : _startTiming,
-                        text: isTiming ? "停止定时" : "定时"),
-                  ),
-                ),
-                Container(
-                  width: 10,
-                ),
-                Expanded(
-                  child: SizedBox(
-                    width: double.maxFinite,
-                    height: 45,
-                    child: ButtonWidget(
-                        onPressed: isRun ? _cancel : _start,
-                        text: isRun ? "停止" : "开始"),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 10,
-          ),
-          Container(
-            child: Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ButtonWidget(
-                      onPressed: _logout,
-                      text: "退出",
+    return Consumer<UserInfo>(
+      builder: (context, userInfo, child) {
+        return Container(
+          margin: EdgeInsets.only(left: 10, right: 10, bottom: 10),
+          height: 160,
+          child: Column(
+            children: [
+              timeUI(),
+              Container(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        width: double.maxFinite,
+                        height: 45,
+                        child: ButtonWidget(
+                            onPressed: isTiming ? _cancelTiming : _startTiming,
+                            text: isTiming ? "停止定时" : "定时"),
+                      ),
                     ),
-                  ),
+                    Container(
+                      width: 10,
+                    ),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.maxFinite,
+                        height: 45,
+                        child: ButtonWidget(
+                            onPressed: isRun ? _cancel : _start,
+                            text: isRun ? "停止" : "开始"),
+                      ),
+                    ),
+                  ],
                 ),
-                Container(
-                  width: 5,
+              ),
+              Container(
+                height: 10,
+              ),
+              Container(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ButtonWidget(
+                          onPressed: _logout,
+                          text: "退出",
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 5,
+                    ),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ButtonWidget(onPressed: _clearLog, text: "清除日志"),
+                      ),
+                    ),
+                    if (userInfo.isActive) Container(
+                      width: 10,
+                    ),
+                    if(userInfo.isActive) Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ButtonWidget(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) {
+                                    return QueryAvailablePage();
+                                  });
+                            },
+                            text: "查降权"),
+                      ),
+                    ),
+                    Container(
+                      width: 5,
+                    ),
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ButtonWidget(
+                            onPressed: () {
+                              showAlertDialog(context, "任务id", (value) {
+                                userInfo.saveConfig(platformAccount: value);
+                                _updateTasks();
+                              }, placeholder: "换行分隔");
+                            },
+                            text: "配置"),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ButtonWidget(onPressed: _clearLog, text: "清除日志"),
-                  ),
-                ),
-                Container(
-                  width: 10,
-                ),
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ButtonWidget(
-                        onPressed: () {
-                          showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (context) {
-                                return QueryAvailablePage();
-                              });
-                        },
-                        text: "查降权"),
-                  ),
-                ),
-                Container(
-                  width: 5,
-                ),
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 45,
-                    child: ButtonWidget(
-                        onPressed: () {
-                          showAlertDialog(context, "任务id", "换行分隔", (value) {
-                            UserInfo().saveConfig(platformAccount: value);
-                            _updateTasks();
-                          });
-                        },
-                        text: "配置"),
-                  ),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
+              )
+            ],
+          ),
+        );
+      }
     );
   }
 }

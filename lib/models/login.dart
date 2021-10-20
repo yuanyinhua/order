@@ -18,7 +18,6 @@ class LoginInfo {
   Map<String, dynamic>? weChatData;
 
   String? password;
-
   LoginInfo({required this.cookies, this.weChatData, this.password});
 
   factory LoginInfo.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);

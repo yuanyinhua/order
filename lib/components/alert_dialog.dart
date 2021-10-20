@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-showAlertDialog(BuildContext context, String title, String placeholder,
-  Function(String) complete) {
+showAlertDialog(BuildContext context, String title,
+  Function(String) complete, {bool obscureText = false, String placeholder = ""}) {
     var code = TextEditingController();
     //显示对话框
     showDialog(
@@ -14,12 +14,13 @@ showAlertDialog(BuildContext context, String title, String placeholder,
             buttonPadding: EdgeInsets.only(right: 20),
             title: Text(title),
             content: Container(
-              height: 80,
+              height: 100,
               child: Column(
                 children: [
                   TextField(
+                    obscureText: obscureText,
                     controller: code,
-                    maxLines: 2,
+                    maxLines: obscureText ? 1 : 3,
                     minLines: 1,
                     decoration: InputDecoration(hintText: placeholder),
                   ),

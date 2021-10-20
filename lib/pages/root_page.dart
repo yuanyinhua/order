@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:task/api/api.dart';
 
 import 'package:task/models/user_info.dart';
-import 'package:task/views/loading_widget.dart';
+import 'package:task/components/loading_widget.dart';
 
 import 'home_page.dart';
 import 'login_page.dart';

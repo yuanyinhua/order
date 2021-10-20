@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'package:task/api/api.dart';
+
+import 'package:task/components/alert_dialog.dart';
+import 'package:task/components/button_widget.dart';
 import 'package:task/models/platform_account_data.dart';
 import 'package:task/models/user_info.dart';
-import 'package:task/views/button_widget.dart';
-import 'package:task/views/log_table_widget.dart';
-import 'package:task/views/alert_dialog.dart';
+import 'package:task/pages/log_table_widget.dart';
 
 class QueryAvailablePage extends StatefulWidget {
   QueryAvailablePage({Key? key}) : super(key: key);
@@ -19,7 +21,13 @@ class QueryAvailablePage extends StatefulWidget {
 
 class _QueryAvailablePageState extends State<QueryAvailablePage> {
   List<PlatformAccountLog> _logDatas = [];
-  bool isRun = true;
+  // 是否运行
+  bool _isRun = false;
+  // 延迟时间
+  double _delayTime = 1;
+  // 定时器
+  Timer? _timer;
+  // 任务
   List<PlatformAccountData> _tasks = [];
   @override
   Widget build(BuildContext context) {
@@ -51,9 +59,9 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
               child: SizedBox(
             width: double.infinity,
             child: ButtonWidget(
-              text: "修改",
+              text: "修改任务",
               onPressed: () {
-                showAlertDialog(context, "修改任务", "", (value) {
+                showAlertDialog(context, "修改任务", (value) {
                   setState(() {
                     _tasks = PlatformAccountData.datasFromString(value);
                   });
@@ -61,19 +69,32 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
               },
             ),
           )),
-          if (!isRun)
-            Container(
-              width: 10,
+          Container(
+            width: 10,
+          ),
+          Expanded(
+              child: SizedBox(
+            width: double.infinity,
+            child: ButtonWidget(
+              text: "延迟时间",
+              onPressed: () {
+                showAlertDialog(context, "延迟时间（秒）", (value) {
+                  _delayTime = double.parse(value);
+                }, placeholder: "请输入延迟时间");
+              },
             ),
-          if (!isRun)
-            Expanded(
-                child: SizedBox(
-              width: double.infinity,
-              child: ButtonWidget(
-                text: "开始",
-                onPressed: _start,
-              ),
-            )),
+          )),
+          Container(
+            width: 10,
+          ),
+          Expanded(
+              child: SizedBox(
+            width: double.infinity,
+            child: ButtonWidget(
+              text: _isRun ? "停止" : "开始",
+              onPressed: _isRun ? _stop : _start,
+            ),
+          )),
         ],
       ),
     );
@@ -116,27 +137,45 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
     super.initState();
     _tasks = List.from(
         PlatformAccountData.datasFromString(UserInfo().platformAccount));
-    _start();
+  }
+
+  void _stop() async {
+    _timer?.cancel();
+    _timer = null;
+    setState(() {
+      _isRun = false;
+    });
   }
 
   void _start() async {
     setState(() {
-      isRun = true;
+      _isRun = true;
     });
     // 更新日志
     void complete(PlatformAccountData task, String? result) {
       setState(() {
         _logDatas.insert(0, PlatformAccountLog(accountData: task, log: result));
       });
+      if (_tasks.isEmpty) {
+        _stop();
+      }
     }
 
-    await Future.wait(_tasks.map((e) => Api.queryTaskAvailable(e).then((value) {
-          complete(e, value);
-        }).onError((error, stackTrace) {
-          complete(e, error.toString());
-        })));
-    setState(() {
-      isRun = false;
+    _timer = Timer.periodic(Duration(milliseconds: (_delayTime * 1000).toInt()),
+        (timer) async {
+      PlatformAccountData task = _tasks.removeAt(0);
+      try {
+        var value = await Api.queryTaskAvailable(task);
+        complete(task, value);
+      } catch (e) {
+        complete(task, e.toString());
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 }

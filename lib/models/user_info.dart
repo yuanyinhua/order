@@ -5,7 +5,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task/api/api.dart';
-import 'package:task/views/my_toast.dart';
+import 'package:task/components/my_toast.dart';
 
 import 'config.dart';
 import 'login.dart';

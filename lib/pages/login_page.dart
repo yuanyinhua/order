@@ -18,9 +18,9 @@ import 'package:task/api/api.dart';
 import 'package:task/models/user_info.dart';
 import 'package:task/models/my_webView_manager.dart';
 
-import 'package:task/views/alert_dialog.dart';
-import 'package:task/views/loading_widget.dart';
-import 'package:task/views/my_toast.dart';
+import 'package:task/components/alert_dialog.dart';
+import 'package:task/components/loading_widget.dart';
+import 'package:task/components/my_toast.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({Key? key}) : super(key: key);
@@ -151,9 +151,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             ),
           ),
           onTap: () {
-            showAlertDialog(context, "认证码", "请输入认证码", (value) {
+            showAlertDialog(context, "认证码", (value) {
               _activeInfo = value;
-            });
+            }, placeholder: "请输入认证码", obscureText: true);
           },
         ),
         Container(
