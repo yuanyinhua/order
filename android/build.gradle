@@ -10,12 +10,13 @@ buildscript {
     }
     repositories {
         google()
-        // jcenter()
-       maven { url 'https://maven.aliyun.com/repository/jcenter' }
-       maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+        jcenter()
+      //  maven { url 'https://maven.aliyun.com/repository/jcenter' }
+      //  maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
     }
 
     dependencies {
+      // 改成7.0会报错，不能发现
         classpath 'com.android.tools.build:gradle:4.1.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
@@ -26,9 +27,9 @@ buildscript {
 allprojects {
     repositories {
         google()
-        // jcenter()
-        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-       maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
+        jcenter()
+        // maven { url 'https://maven.aliyun.com/repository/jcenter' }
+      //  maven { url 'http://maven.aliyun.com/nexus/content/groups/public' }
     }
 }
 

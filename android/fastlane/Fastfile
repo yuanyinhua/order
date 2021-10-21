@@ -1,0 +1,27 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:android)
+
+platform :android do
+  desc "auto output apk, upload payer"
+  lane:pgyer do
+    api_key = "a39a0f089321ef0680a16149b263770e"
+    user_key = "60765d6594ae27dd8461dae8967ae99a"
+    gradle(task:'clean')
+    gradle(task: 'assemble', build_type: 'Release')
+    pgyer(update_description: "update by fastlane", api_key: "#{api_key}", user_key: "#{user_key}", install_type: "1")
+  end
+end
