@@ -20,7 +20,7 @@ or alternatively using `brew install fastlane`
 ```
 fastlane ios release
 ```
-自动打包
+auto output ipa, upload payer
 
 ----
 

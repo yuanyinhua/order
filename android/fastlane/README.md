@@ -16,9 +16,9 @@ or alternatively using `brew install fastlane`
 
 # Available Actions
 ## Android
-### android pgyer
+### android release
 ```
-fastlane android pgyer
+fastlane android release
 ```
 auto output apk, upload payer
 

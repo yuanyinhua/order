@@ -17,11 +17,21 @@ default_platform(:android)
 
 platform :android do
   desc "auto output apk, upload payer"
-  lane:pgyer do
+  lane :release do
     api_key = "a39a0f089321ef0680a16149b263770e"
     user_key = "60765d6594ae27dd8461dae8967ae99a"
-    gradle(task:'clean')
-    gradle(task: 'assemble', build_type: 'Release')
-    pgyer(update_description: "update by fastlane", api_key: "#{api_key}", user_key: "#{user_key}", install_type: "1")
+    # 不能清除，有些东西需要下载很久才能成功打包apk
+    # gradle(task:'clean')
+    # gradle(task: 'assemble', build_type: 'Release')
+    system "flutter build apk"
+    path = Dir::getwd
+    path = path.chomp("/android/fastlane")
+    pgyer(
+      update_description: "update by fastlane", 
+      api_key: "#{api_key}", 
+      user_key: "#{user_key}", 
+      install_type: "1",
+      apk: "#{path}/build/app/outputs/apk/release/app-release.apk"
+    )
   end
 end
