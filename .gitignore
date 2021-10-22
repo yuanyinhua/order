@@ -45,3 +45,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 # /android/key.properties 暂时上传
+
+/android/fastlane/report.xml
+/ios/fastlane/report.xml
