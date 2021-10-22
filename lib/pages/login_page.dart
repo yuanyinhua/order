@@ -153,7 +153,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           onTap: () {
             showAlertDialog(context, "认证码", (value) {
               _activeInfo = value;
-            }, placeholder: "请输入认证码", obscureText: true);
+            }, placeholder: "请输入认证码 ", obscureText: true);
           },
         ),
         Container(
