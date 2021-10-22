@@ -1,0 +1,16 @@
+#！ /bin/bash
+echo "---------自动打包上传蒲公英---------"
+# dirname $0，进入当前执行的脚本文件的父目录
+cd `dirname $0`
+
+# 开始ios打包上传蒲公英
+echo "-----------ios------------"
+cd ios
+fastlane release
+
+# 开始andriod打包上传蒲公英
+echo "---------android---------"
+cd ../android
+fastlane release
+
+echo "\033[32;1m"安卓和iOS打包并上传蒲公英成功！"\033[0m"

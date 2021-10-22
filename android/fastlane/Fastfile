@@ -22,10 +22,13 @@ platform :android do
     user_key = "60765d6594ae27dd8461dae8967ae99a"
     # 不能清除，有些东西需要下载很久才能成功打包apk
     # gradle(task:'clean')
+    # 使用gradle命令打包
     # gradle(task: 'assemble', build_type: 'Release')
+    # 使用flutter命令打包
     system "flutter build apk"
     path = Dir::getwd
     path = path.chomp("/android/fastlane")
+    # 上传蒲公英 插件全局安装
     pgyer(
       update_description: "update by fastlane", 
       api_key: "#{api_key}", 

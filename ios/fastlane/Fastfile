@@ -20,14 +20,14 @@ platform :ios do
   lane :release do
     api_key = "a39a0f089321ef0680a16149b263770e"
     user_key = "60765d6594ae27dd8461dae8967ae99a"
-
+    # xcode打包
     gym(
       clean:true, #打包前clean项目
       export_method: "ad-hoc", #导出方式
       configuration: "Release",#环境
       output_directory:"./build/outputs",#ipa的存放目录
     )
-    # 上传蒲公英
+    # 上传蒲公英 插件全局安装
     pgyer(
       update_description: "update by fastlane", 
       api_key: "#{api_key}", 
