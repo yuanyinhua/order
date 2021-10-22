@@ -1,15 +1,19 @@
 #！ /bin/bash
 echo "---------自动打包上传蒲公英---------"
+# 更新
+git pull
+flutter pub get
+
 # dirname $0，进入当前执行的脚本文件的父目录
 cd `dirname $0`
 
 # 开始ios打包上传蒲公英
-echo "-----------ios------------"
+echo "\n---------------ios--------------\n"
 cd ios
 fastlane release
 
 # 开始andriod打包上传蒲公英
-echo "---------android---------"
+echo "\n--------------android--------------\n"
 cd ../android
 fastlane release
 
