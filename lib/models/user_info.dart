@@ -65,7 +65,7 @@ class UserInfo extends ChangeNotifier {
   }
 
   saveDelayTime(String val) {
-    saveConfig(delayTime: max(defaultDelayTime, double.parse(val)));
+    saveConfig(delayTime: max(isActive ? 0.1 : defaultDelayTime, double.parse(val)));
   }
 
   // 更新登录信息
@@ -124,8 +124,8 @@ class UserInfo extends ChangeNotifier {
       return true;
     } catch (_) {}
   }
-
-  updateConfig(Map data) {
+  // 更新时间配置
+  updateTimeConfig(Map data) {
     try {
       double delayTime;
       if (Platform.isAndroid) {
@@ -138,6 +138,7 @@ class UserInfo extends ChangeNotifier {
     }
   }
 
+  // 退出
   logout() {
     isLogin = false;
     if (Platform.isAndroid) {

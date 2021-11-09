@@ -117,7 +117,7 @@ class Api {
       if (response.statusCode == 200) {
         var document = parse(response.data);
         var text = document.getElementsByTagName("table")[0].text.trim();
-        UserInfo().updateConfig(jsonDecode(text));
+        UserInfo().updateTimeConfig(jsonDecode(text));
       } else {
         Future.delayed(const Duration(seconds: 1 * 60)).then((value) {
           updateConfig();
