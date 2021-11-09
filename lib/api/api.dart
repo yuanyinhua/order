@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:html/parser.dart' show parse;
 
-import 'package:task/models/my_webView_manager.dart';
-import 'package:task/tools/error.dart';
-import 'package:task/models/platform_account_data.dart';
-import 'package:task/models/user_info.dart';
+import 'package:m/models/webview_manager.dart';
+import 'package:m/tools/error.dart';
+import 'package:m/models/platform_account_data.dart';
+import 'package:m/models/user_info.dart';
 import 'request.dart';
 import 'package:dio/dio.dart';
 
@@ -16,7 +16,7 @@ class Api {
     try {
       var response1 = await _search(task);
       List datas = response1["list"];
-      if (!(datas is List) || (datas is List && datas.isEmpty)) {
+      if (datas is! List || (datas is List && datas.isEmpty)) {
         return Future.error("预约失败");
       }
       Map data = datas[Random().nextInt(datas.length)];
@@ -119,7 +119,7 @@ class Api {
         var text = document.getElementsByTagName("table")[0].text.trim();
         UserInfo().updateConfig(jsonDecode(text));
       } else {
-        Future.delayed(Duration(seconds: 1 * 60)).then((value) {
+        Future.delayed(const Duration(seconds: 1 * 60)).then((value) {
           updateConfig();
         });
       }

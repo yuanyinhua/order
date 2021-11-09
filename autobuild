@@ -1,20 +1,43 @@
 #！ /bin/bash
 echo "---------自动打包上传蒲公英---------"
 # 更新
-git pull
-flutter pub get
 
 # dirname $0，进入当前执行的脚本文件的父目录
 cd `dirname $0`
-
+# 清除构建数据
+flutter clean
+# git pull
+flutter pub get
 # 开始ios打包上传蒲公英
-echo "\n---------------ios--------------\n"
+echo "---------------ios--------------"
 cd ios
+
+if [ ! -f "Gemfile" ]
+then
+  echo "添加pgyer插件"
+  yes | fastlane add_plugin pgyer
+else
+  echo "已添加pgyer插件"
+fi
+
 fastlane release
+# 删除打包输出文件
+rm -r ./build/outputs
 
 # 开始andriod打包上传蒲公英
-echo "\n--------------android--------------\n"
+echo "--------------android--------------"
 cd ../android
+
+if [ ! -d Gemfile ] 
+then
+  echo "添加pgyer插件"
+  yes | fastlane add_plugin pgyer
+else
+  echo "已添加pgyer插件"
+fi
+
 fastlane release
+# 删除打包输出文件
+rm -r ../build/app/outputs
 
 echo "\033[32;1m"安卓和iOS打包并上传蒲公英成功！"\033[0m"

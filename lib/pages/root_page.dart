@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:task/api/api.dart';
+import 'package:m/api/api.dart';
 
-import 'package:task/models/user_info.dart';
-import 'package:task/components/loading_widget.dart';
+import 'package:m/models/user_info.dart';
+import 'package:m/components/loading_widget.dart';
 
 import 'home_page.dart';
 import 'login_page.dart';
 
 class RootPage extends StatefulWidget {
-  RootPage({Key? key}) : super(key: key);
+  const RootPage({Key? key}) : super(key: key);
   @override
   _RootPageState createState() => _RootPageState();
 }
 
 class _RootPageState extends State<RootPage> {
   // 是否加载完成
-  Future<bool>? _loading = Api.load();
+  final Future<bool>? _loading = Api.load();
 
   @override
   void initState() {
@@ -41,18 +41,18 @@ class _RootPageState extends State<RootPage> {
                 future: _loading,
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return Center(
+                    return const Center(
                       child: LoadingWidget(),
                     );
                   }
                   return Consumer<UserInfo>(
                       builder: (context, userInfo, child) {
-                    return userInfo.isLogin ? HomePage() : LoginPage();
+                    return userInfo.isLogin ? const HomePage() : const LoginPage();
                   });
                 }),
           ),
         ),
-        backgroundColor: Color.fromRGBO(191, 191, 190, 1));
+        backgroundColor: const Color.fromRGBO(191, 191, 190, 1));
   }
 
   @override

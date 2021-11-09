@@ -13,8 +13,8 @@ class ButtonWidget extends StatelessWidget {
 
   final style = ButtonStyle(
       backgroundColor:
-          MaterialStateProperty.all(Color.fromRGBO(208, 208, 208, 1)));
-  final textStyle = TextStyle(color: Colors.black87, fontSize: 12);
+          MaterialStateProperty.all(const Color.fromRGBO(208, 208, 208, 1)));
+  final textStyle = const TextStyle(color: Colors.black87, fontSize: 12);
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(

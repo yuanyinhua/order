@@ -3,16 +3,16 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import 'package:task/api/api.dart';
+import 'package:m/api/api.dart';
 
-import 'package:task/components/alert_dialog.dart';
-import 'package:task/components/button_widget.dart';
-import 'package:task/models/platform_account_data.dart';
-import 'package:task/models/user_info.dart';
-import 'package:task/pages/log_table_widget.dart';
+import 'package:m/components/alert_dialog.dart';
+import 'package:m/components/button_widget.dart';
+import 'package:m/models/platform_account_data.dart';
+import 'package:m/models/user_info.dart';
+import 'package:m/pages/log_table_widget.dart';
 
 class QueryAvailablePage extends StatefulWidget {
-  QueryAvailablePage({Key? key}) : super(key: key);
+  const QueryAvailablePage({Key? key}) : super(key: key);
   @override
   State<StatefulWidget> createState() {
     return _QueryAvailablePageState();
@@ -20,7 +20,7 @@ class QueryAvailablePage extends StatefulWidget {
 }
 
 class _QueryAvailablePageState extends State<QueryAvailablePage> {
-  List<PlatformAccountLog> _logDatas = [];
+  final List<PlatformAccountLog> _logDatas = [];
   // 是否运行
   bool _isRun = false;
   // 延迟时间
@@ -52,7 +52,7 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
   Widget _bottomUI(BuildContext context) {
     return Container(
       height: 50,
-      padding: EdgeInsets.only(left: 10, right: 10),
+      padding: const EdgeInsets.only(left: 10, right: 10),
       child: Row(
         children: [
           Expanded(
@@ -105,7 +105,7 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
       height: 35,
       child: Stack(
         children: [
-          Center(
+          const Center(
             child: Text(
               "查降权",
               style: TextStyle(color: Colors.black),
@@ -114,7 +114,7 @@ class _QueryAvailablePageState extends State<QueryAvailablePage> {
           Row(
             children: [
               GestureDetector(
-                child: SizedBox(
+                child: const SizedBox(
                   child: Center(
                     child: Icon(Icons.close),
                   ),

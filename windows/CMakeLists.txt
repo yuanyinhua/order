@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
-project(task LANGUAGES CXX)
+project(m LANGUAGES CXX)
 
-set(BINARY_NAME "task")
+set(BINARY_NAME "m")
 
 cmake_policy(SET CMP0063 NEW)
 

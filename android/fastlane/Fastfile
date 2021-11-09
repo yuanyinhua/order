@@ -28,7 +28,7 @@ platform :android do
     system "flutter build apk"
     path = Dir::getwd
     path = path.chomp("/android/fastlane")
-    # 上传蒲公英 插件全局安装
+    # 上传蒲公英
     pgyer(
       update_description: "update by fastlane", 
       api_key: "#{api_key}", 

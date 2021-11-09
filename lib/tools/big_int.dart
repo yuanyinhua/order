@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_typing_uninitialized_variables, curly_braces_in_flow_control_structures
+
 import 'dart:core';
 import 'dart:math';
 
@@ -102,7 +104,7 @@ class MyBigInt {
     mask = 32767;
     radix = mask + 1;
     digitsStr =
-        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_=!@#\$%^&*()[]{}|;:,.<>/?`~ \\\'\"+-';
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_=!@#\$%^&*()[]{}|;:,.<>/?`~ \\\'"+-';
 
     one = int2bigInt(1, 1, 1); //constant used in pow_mod()
 
@@ -1111,7 +1113,7 @@ class MyBigInt {
         s = str.substring(t, t + 1) + s;
       }
     }
-    if (s.length == 0) s = str[0];
+    if (s.isEmpty) s = str[0];
     return s;
   }
 

@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
-import 'package:task/models/user_info.dart';
-import 'package:task/tools/error.dart';
-import 'package:task/tools/bigInt.dart';
+import 'package:m/models/user_info.dart';
+import 'package:m/tools/error.dart';
+import 'package:m/tools/big_int.dart';
 import 'constant.dart';
 
 // 创建 Dio 实例
@@ -72,12 +72,13 @@ class Request {
     for (var i = 0; i < arr.length; i++) {
       // ignore: non_constant_identifier_names
       dynamic arr_type = config[arr[i]];
-      if (arr_type == null) arr_type = '';
+      arr_type ??= '';
 
-      if (arr_type != null && (arr_type is Object || arr_type is List))
+      if (arr_type != null && (arr_type is Object || arr_type is List)) {
         str = "$str${arr[i]}=[${config(arr_type)}]";
-      else
+      } else {
         str = "$str${arr[i]}=${arr_type.toString()}";
+      }
     }
     return str.toString().replaceAll("[^a-zA-Z0-9]", "");
   }
@@ -94,7 +95,7 @@ class Request {
       "windowNo": _kParamsWindowNo
     };
     var str = "$_kParamsSecret${configSort(configData)}$_kParamsSecret";
-    str = md5.convert(Utf8Encoder().convert(str)).toString();
+    str = md5.convert(const Utf8Encoder().convert(str)).toString();
     return str;
   }
 
@@ -121,7 +122,7 @@ class Request {
         if (val is Map) {
           return val;
         }
-      } catch (e) {}
+      } catch (_) {}
     }
     return response.data;
   }
@@ -144,7 +145,7 @@ class Request {
           data: _requestParams(params, path), options: options);
       if (response.statusCode == 200) {
         var data = _responseData(response);
-        if (!(data is Map)) {
+        if (data is! Map) {
           return data;
         }
         int? code = data["code"];
@@ -246,7 +247,7 @@ class Request {
       var A = bigIntObj.powMod(bigg, biga, bigp);
       var strA = bigIntObj.bigInt2str(A, 10);
       var timestamp = DateTime.now().millisecondsSinceEpoch;
-      var content = Utf8Encoder().convert(timestamp.toString());
+      var content = const Utf8Encoder().convert(timestamp.toString());
       var windowNo = md5.convert(content).toString();
 
       var session = await _request("yutang/index.php/bas/Sign/server", 'post',

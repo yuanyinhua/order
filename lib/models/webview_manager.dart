@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:task/api/constant.dart';
+import 'package:m/api/constant.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 class MyWebViewManager {
@@ -30,7 +30,7 @@ class MyWebViewManager {
           onPageStarted: (url) {
 
           },
-          javascriptChannels: [
+          javascriptChannels: {
             JavascriptChannel(
                 name: 'tudouApp', //handleName
                 onMessageReceived: (JavascriptMessage message) {
@@ -39,7 +39,7 @@ class MyWebViewManager {
                 name: 'JSHandle', //handleName
                 onMessageReceived: (JavascriptMessage message) {
                 }),
-          ].toSet(),
+          },
           javascriptMode: JavascriptMode.unrestricted,
           onPageFinished: (url) async {
             _finished = true;
@@ -59,10 +59,8 @@ class MyWebViewManager {
           await loadUrl(kTestUrl);
         }
       }
-      var ret = await _controller!.evaluateJavascript("document.cookie");
-      print(ret);
-    } catch (e) {
-      print(e);
+      await _controller!.runJavascriptReturningResult("document.cookie");
+    } catch (_) {
     }
   }
 
@@ -70,7 +68,7 @@ class MyWebViewManager {
     _finished = false;
     await _controller!.loadUrl(url);
     await Future.doWhile(() async {
-      await Future.delayed(Duration(seconds: 1));
+      await Future.delayed(const Duration(seconds: 1));
       if (_finished) {
         return false;
       }

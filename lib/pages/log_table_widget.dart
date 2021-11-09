@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:task/models/platform_account_data.dart';
+import 'package:m/models/platform_account_data.dart';
  
  class LogTableWidget extends StatelessWidget {
   final List<PlatformAccountLog> logDatas;
-  LogTableWidget(this.logDatas, {Key? key});
+  const LogTableWidget(this.logDatas, {Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return tableUI();
@@ -11,8 +11,8 @@ import 'package:task/models/platform_account_data.dart';
 
   Widget tableUI() {
     var columnWidths = {
-      0: FixedColumnWidth(120),
-      1: FlexColumnWidth(),
+      0: const FixedColumnWidth(120),
+      1: const FlexColumnWidth(),
     };
     Widget header = Table(
       border: TableBorder.all(color: Colors.grey, width: 0.5),
@@ -30,7 +30,7 @@ import 'package:task/models/platform_account_data.dart';
                   child: Center(
                     child: Text(
                       item,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontWeight: FontWeight.bold, color: Colors.black),
                       textAlign: TextAlign.center,
                     ),
@@ -56,8 +56,8 @@ import 'package:task/models/platform_account_data.dart';
               ),
             ),
             Container(
-              padding: EdgeInsets.all(5),
-              constraints: BoxConstraints(maxHeight: 150),
+              padding: const EdgeInsets.all(5),
+              constraints: const BoxConstraints(maxHeight: 150),
               child: Text(
               item.log ?? "",
               textAlign: TextAlign.left,

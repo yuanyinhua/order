@@ -12,18 +12,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:permission_handler/permission_handler.dart';
+// import 'package:permission_handler/permission_handler.dart';
 
-import 'package:task/api/api.dart';
-import 'package:task/models/user_info.dart';
-import 'package:task/models/my_webView_manager.dart';
+import 'package:m/api/api.dart';
+import 'package:m/models/user_info.dart';
+import 'package:m/models/webview_manager.dart';
 
-import 'package:task/components/alert_dialog.dart';
-import 'package:task/components/loading_widget.dart';
-import 'package:task/components/my_toast.dart';
+import 'package:m/components/alert_dialog.dart';
+import 'package:m/components/loading_widget.dart';
+import 'package:m/components/my_toast.dart';
 
 class LoginPage extends StatefulWidget {
-  LoginPage({Key? key}) : super(key: key);
+  const LoginPage({Key? key}) : super(key: key);
+  @override
   _LoginPageState createState() => _LoginPageState();
 }
 
@@ -84,7 +85,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     _password.text = UserInfo().password ?? "";
     if (_isWechatLogin) {
       return Container(
-        margin: EdgeInsets.only(left: 20, right: 20, top: 200),
+        margin: const EdgeInsets.only(left: 20, right: 20, top: 200),
         child: Column(
           children: [
             Container(
@@ -102,7 +103,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           children: [
             TextField(
               obscureText: true,
-              decoration: InputDecoration(hintText: "输入登录信息"),
+              decoration: const InputDecoration(hintText: "输入登录信息"),
               controller: _token,
             ),
             Container(
@@ -111,11 +112,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             if (Platform.isAndroid)
               TextField(
                 obscureText: true,
-                decoration: InputDecoration(hintText: "输入密码"),
+                decoration: const InputDecoration(hintText: "输入密码"),
                 controller: _password,
               ),
             Container(
-              margin: EdgeInsets.only(top: 20, bottom: 10),
+              margin: const EdgeInsets.only(top: 20, bottom: 10),
               child: SizedBox(
                 width: double.infinity,
                 height: 45,
@@ -124,10 +125,10 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                     UserInfo().updateLoginInfo(_token.text,
                         activeCode: _activeInfo, password: _password.text);
                   },
-                  child: Text("登录", style: TextStyle(color: Colors.black87)),
+                  child: const Text("登录", style: TextStyle(color: Colors.black87)),
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(
-                          Color.fromRGBO(208, 208, 208, 1))),
+                          const Color.fromRGBO(208, 208, 208, 1))),
                 ),
               ),
             ),
@@ -144,7 +145,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           _isWechatLogin ? MainAxisAlignment.center : MainAxisAlignment.end,
       children: [
         GestureDetector(
-          child: Container(
+          child: const SizedBox(
             height: 40,
             child: Center(
               child: Text("认证码"),
@@ -160,7 +161,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           width: 20,
         ),
         GestureDetector(
-          child: Container(
+          child: SizedBox(
             height: 40,
             child: Center(
               child: Text(_isWechatLogin ? "手动登录" : "微信登录"),
@@ -181,7 +182,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   void _waitLogin() async {
     if (_getQrCodeData == null) {
       // 获取二维码内容
-      _getQrCodeData = Future.delayed(Duration(seconds: 0), () async {
+      _getQrCodeData = Future.delayed(const Duration(seconds: 0), () async {
         var response = await Api.qrCodeData();
         setState(() {
           _qrCode = response as String;
@@ -191,10 +192,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       });
       return;
     }
-    if (_timer == null) {
-      _timer = Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
+    _timer ??= Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
           (timer) async {
-        if (!_isWechatLogin || !this.mounted) {
+        if (!_isWechatLogin || !mounted) {
           return;
         }
         try {
@@ -204,12 +204,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           if (_waitScanReqCount > _waitScanreqCountMax) {
             _waitScanReqCount = 0;
             _stopWaitLogin();
-            await Future.delayed(Duration(seconds: 5));
+            await Future.delayed(const Duration(seconds: 5));
             _waitLogin();
           }
         }
       });
-    }
   }
 
   void _stopWaitLogin() {
@@ -219,7 +218,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   // 获取二维码UI
   Widget qrImage() {
-    GlobalKey _globalKey = new GlobalKey();
+    GlobalKey _globalKey = GlobalKey();
     return FutureBuilder(
       future: _getQrCodeData,
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
@@ -233,11 +232,11 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             onLongPress: () async {
               try {
                 // 添加图片权限
-                var status = await Permission.storage.status;
-                if (!status.isGranted) {
-                  status = await Permission.storage.request();
-                  return;
-                }
+                // var status = await Permission.storage.status;
+                // if (!status.isGranted) {
+                //   status = await Permission.storage.request();
+                //   return;
+                // }
                 // 生成图片
                 RenderRepaintBoundary boundary = _globalKey.currentContext!
                     .findRenderObject() as RenderRepaintBoundary;
@@ -259,7 +258,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             ),
           );
         } else {
-          return Container(
+          return const SizedBox(
             height: 200,
             width: 200,
             child: LoadingWidget(),

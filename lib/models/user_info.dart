@@ -4,8 +4,8 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:task/api/api.dart';
-import 'package:task/components/my_toast.dart';
+import 'package:m/api/api.dart';
+import 'package:m/components/my_toast.dart';
 
 import 'config.dart';
 import 'login.dart';
@@ -22,7 +22,8 @@ class UserInfo extends ChangeNotifier {
             isActive: false,
             platformAccount: "",
             delayTime: 0.5,
-            queryDelayTime: 0.3);
+            queryDelayTime: 0.3, 
+            defaultDelayTime: Platform.isAndroid ? 2 : 1.2);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
@@ -36,7 +37,7 @@ class UserInfo extends ChangeNotifier {
 
   double get delayTime => _config.delayTime;
 
-  double _defaultDelayTime = Platform.isAndroid ? 2 : 1.2;
+  double get defaultDelayTime => _config.defaultDelayTime;
 
   bool get isActive => _config.isActive;
   String? get platformAccount => _config.platformAccount;
@@ -46,7 +47,7 @@ class UserInfo extends ChangeNotifier {
   saveConfig(
       {String? platformAccount,
       String? activeCode,
-      double? delayTime,
+      double? delayTime, 
       double? queryDelayTime}) {
     if (platformAccount != null) {
       _config.platformAccount = platformAccount;
@@ -55,7 +56,7 @@ class UserInfo extends ChangeNotifier {
       _config.isActive = (activeCode == "10496${DateTime.now().hour}");
     }
     if (delayTime != null) {
-      _config.delayTime = max(_defaultDelayTime, delayTime);
+      _config.delayTime = delayTime;
       notifyListeners();
     }
     if (queryDelayTime != null) {
@@ -64,10 +65,14 @@ class UserInfo extends ChangeNotifier {
     _prefs!.setString("config", _config.toString());
   }
 
+  saveDelayTime(String val) {
+    saveConfig(delayTime: max(defaultDelayTime, double.parse(val)));
+  }
+
   // 更新登录信息
   updateLoginInfo(String? cookies,
       {Map? wechatData, String? activeCode, String? password}) {
-    if (cookies?.length == 0) {
+    if (cookies == null || cookies.isEmpty) {
       MyToast.showToast("输入登录信息");
       return;
     }
@@ -77,7 +82,7 @@ class UserInfo extends ChangeNotifier {
     }
     Api.updateConfig();
     saveConfig(activeCode: activeCode ?? "");
-    if (cookies is String && cookies.length > 0) {
+    if (cookies is String && cookies.isNotEmpty) {
       if (!cookies.contains("PHPSESSID")) {
         cookies = "PHPSESSID=;$cookies";
       }
@@ -115,24 +120,29 @@ class UserInfo extends ChangeNotifier {
         _config =
             Config.fromJson(json.decode(prefs.getString("config") as String));
       } else {
-        _config.delayTime = _defaultDelayTime;
+        _config.delayTime = defaultDelayTime;
       }
       return true;
-    } catch (e) {}
+    } catch (_) {}
   }
 
   updateConfig(Map data) {
     try {
+      double delayTime;
       if (Platform.isAndroid) {
-         _defaultDelayTime = (data["android"]["delayTime"] as num).toDouble();
+        delayTime = (data["android"]["delayTime"] as num).toDouble();
       } else {
-        _defaultDelayTime = (data["delayTime"] as num).toDouble();
+        delayTime = (data["delayTime"] as num).toDouble();
       }
-      if (_defaultDelayTime > delayTime) {
-        saveConfig(delayTime: _defaultDelayTime);
-      }
-    } catch (e) {
-      print(e);
+      saveConfig(delayTime: delayTime);
+    } catch (_) {
+    }
+  }
+
+  logout() {
+    isLogin = false;
+    if (Platform.isAndroid) {
+      saveConfig(delayTime: defaultDelayTime);
     }
   }
 }

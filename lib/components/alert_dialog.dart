@@ -9,11 +9,11 @@ showAlertDialog(BuildContext context, String title,
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (context, state) {
           return AlertDialog(
-            titlePadding: EdgeInsets.only(left: 20, top: 10),
-            contentPadding: EdgeInsets.only(left: 20, right: 20, bottom: 0),
-            buttonPadding: EdgeInsets.only(right: 20),
+            titlePadding: const EdgeInsets.only(left: 20, top: 10),
+            contentPadding: const EdgeInsets.only(left: 20, right: 20, bottom: 0),
+            buttonPadding: const EdgeInsets.only(right: 20),
             title: Text(title),
-            content: Container(
+            content: SizedBox(
               height: 100,
               child: Column(
                 children: [
@@ -32,7 +32,7 @@ showAlertDialog(BuildContext context, String title,
             ),
             actions: [
               TextButton(
-                child: Text("保存"),
+                child: const Text("保存"),
                 onPressed: () {
                   complete(code.text);
                   Navigator.of(context, rootNavigator: true).pop();
