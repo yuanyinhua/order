@@ -12,14 +12,14 @@ flutter pub get
 echo "---------------ios--------------"
 cd ios
 
-if [ ! -f "Gemfile" ]
-then
-  echo "添加pgyer插件"
-  yes | fastlane add_plugin pgyer
-else
-  echo "已添加pgyer插件"
-fi
-
+# if [ ! -f "Gemfile" ]
+# then
+#   echo "添加pgyer插件"
+#   yes | fastlane add_plugin pgyer
+# else
+#   echo "已添加pgyer插件"
+# fi
+pod install
 fastlane release
 # 删除打包输出文件
 rm -r ./build/outputs
@@ -27,14 +27,6 @@ rm -r ./build/outputs
 # 开始andriod打包上传蒲公英
 echo "--------------android--------------"
 cd ../android
-
-if [ ! -d Gemfile ] 
-then
-  echo "添加pgyer插件"
-  yes | fastlane add_plugin pgyer
-else
-  echo "已添加pgyer插件"
-fi
 
 fastlane release
 # 删除打包输出文件

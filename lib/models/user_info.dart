@@ -22,8 +22,7 @@ class UserInfo extends ChangeNotifier {
             isActive: false,
             platformAccount: "",
             delayTime: 0.5,
-            queryDelayTime: 0.3, 
-            defaultDelayTime: Platform.isAndroid ? 2 : 1.2);
+            queryDelayTime: 0.3);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
@@ -37,7 +36,7 @@ class UserInfo extends ChangeNotifier {
 
   double get delayTime => _config.delayTime;
 
-  double get defaultDelayTime => _config.defaultDelayTime;
+  double get defaultDelayTime => Platform.isAndroid ? 2 : 1.2;
 
   bool get isActive => _config.isActive;
   String? get platformAccount => _config.platformAccount;
