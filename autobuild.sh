@@ -19,7 +19,6 @@ cd ios
 # else
 #   echo "已添加pgyer插件"
 # fi
-pod install
 fastlane release
 # 删除打包输出文件
 rm -r ./build/outputs

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:m/api/api.dart';
 import 'package:m/components/my_toast.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 import 'config.dart';
 import 'login.dart';
@@ -19,10 +20,11 @@ class UserInfo extends ChangeNotifier {
 
   LoginInfo? _loginInfo;
   Config _config = Config(
-            isActive: false,
-            platformAccount: "",
-            delayTime: 0.5,
-            queryDelayTime: 0.3);
+      isActive: false,
+      platformAccount: "",
+      delayTime: 0.5,
+      queryDelayTime: 0.3,
+      minDelayTime: Platform.isAndroid ? 2 : 1.2);
   // 本地存储
   SharedPreferences? _prefs;
   // 是否登录
@@ -43,11 +45,13 @@ class UserInfo extends ChangeNotifier {
 
   String? get cookie => _loginInfo?.cookies;
   // 保存配置信息
-  saveConfig(
-      {String? platformAccount,
-      String? activeCode,
-      double? delayTime, 
-      double? queryDelayTime}) {
+  saveConfig({
+    String? platformAccount,
+    String? activeCode,
+    double? delayTime,
+    double? queryDelayTime,
+    double? defaultDelayTime,
+  }) {
     if (platformAccount != null) {
       _config.platformAccount = platformAccount;
     }
@@ -56,7 +60,9 @@ class UserInfo extends ChangeNotifier {
     }
     if (delayTime != null) {
       _config.delayTime = delayTime;
-      notifyListeners();
+    }
+    if (defaultDelayTime != null) {
+      _config.minDelayTime = defaultDelayTime;
     }
     if (queryDelayTime != null) {
       _config.queryDelayTime = queryDelayTime;
@@ -65,12 +71,14 @@ class UserInfo extends ChangeNotifier {
   }
 
   saveDelayTime(String val) {
-    saveConfig(delayTime: max(isActive ? 0.1 : defaultDelayTime, double.parse(val)));
+    saveConfig(
+        delayTime: max(isActive ? 0 : _config.minDelayTime, double.parse(val)));
+    notifyListeners();
   }
 
   // 更新登录信息
   updateLoginInfo(String? cookies,
-      {Map? wechatData, String? activeCode, String? password}) {
+      {Map? wechatData, String? activeCode, String? password}) async {
     if (cookies == null || cookies.isEmpty) {
       MyToast.showToast("输入登录信息");
       return;
@@ -79,26 +87,32 @@ class UserInfo extends ChangeNotifier {
       MyToast.showToast("密码错误");
       return;
     }
-    Api.updateConfig();
-    saveConfig(activeCode: activeCode ?? "");
-    if (cookies is String && cookies.isNotEmpty) {
-      if (!cookies.contains("PHPSESSID")) {
-        cookies = "PHPSESSID=;$cookies";
-      }
-      if (!cookies.contains("tbtools")) {
+    try {
+      if (cookies is String && cookies.isNotEmpty) {
+        if (!cookies.contains("PHPSESSID")) {
+          cookies = "PHPSESSID=;$cookies";
+        }
+        if (!cookies.contains("tbtools")) {
+          MyToast.showToast("登录信息不正确");
+          return;
+        }
+      } else {
         MyToast.showToast("登录信息不正确");
         return;
       }
+      EasyLoading.show(status: "正在登录...");
+      await Api.updateConfig();
       _loginInfo = LoginInfo(
           cookies: cookies,
           weChatData: wechatData as Map<String, dynamic>?,
           password: password);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
-    } else {
-      isLogin = false;
-      _loginInfo = null;
-      _prefs!.remove("loginInfo");
+      saveConfig(activeCode: activeCode ?? "");
+      EasyLoading.dismiss();
+    } catch (e) {
+      EasyLoading.dismiss();
+      MyToast.showToast(e.toString());
     }
   }
 
@@ -115,15 +129,20 @@ class UserInfo extends ChangeNotifier {
           isLogin = true;
         }
       }
-      if (prefs.getString("config") != null) {
+      try {
+        if (prefs.getString("config") != null) {
         _config =
             Config.fromJson(json.decode(prefs.getString("config") as String));
       } else {
         _config.delayTime = defaultDelayTime;
       }
+      } catch (e) {
+        _config.minDelayTime = defaultDelayTime;
+      }
       return true;
     } catch (_) {}
   }
+
   // 更新时间配置
   updateTimeConfig(Map data) {
     try {
@@ -133,16 +152,15 @@ class UserInfo extends ChangeNotifier {
       } else {
         delayTime = (data["delayTime"] as num).toDouble();
       }
-      saveConfig(delayTime: delayTime);
-    } catch (_) {
-    }
+      saveConfig(delayTime: delayTime, defaultDelayTime: delayTime);
+    } catch (_) {}
   }
 
   // 退出
   logout() {
     isLogin = false;
     if (Platform.isAndroid) {
-      saveConfig(delayTime: defaultDelayTime);
+      _prefs?.remove("config");
     }
   }
 }

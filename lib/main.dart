@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:m/models/user_info.dart';
 import 'package:m/pages/root_page.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 void main() {
   runApp(ChangeNotifierProvider(
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const RootPage(),
+      builder: EasyLoading.init(),
     );
   }
 }

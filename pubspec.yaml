@@ -48,6 +48,7 @@ dependencies:
   image_gallery_saver: '^1.7.0'
   # permission_handler: ^8.2.6
   json_annotation: ^4.3.0
+  flutter_easyloading: ^3.0.3
   html: ^0.15.0
 
 dev_dependencies:

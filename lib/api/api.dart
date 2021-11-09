@@ -8,6 +8,7 @@ import 'package:m/models/platform_account_data.dart';
 import 'package:m/models/user_info.dart';
 import 'request.dart';
 import 'package:dio/dio.dart';
+import 'package:m/tools/error.dart';
 
 String? _kParamsSceneId;
 
@@ -112,17 +113,17 @@ class Api {
 
   static updateConfig() async {
     try {
-      var response = await Dio()
+      var response = await Dio(BaseOptions(connectTimeout: 5000,receiveTimeout: 3000,))
           .get('https://github.com/baichu123/config/blob/main/config.json');
       if (response.statusCode == 200) {
         var document = parse(response.data);
         var text = document.getElementsByTagName("table")[0].text.trim();
         UserInfo().updateTimeConfig(jsonDecode(text));
       } else {
-        Future.delayed(const Duration(seconds: 1 * 60)).then((value) {
-          updateConfig();
-        });
+        return Future.error("登录失败");
       }
-    } catch (_) {}
+    } catch (e) {
+      return Future.error(MError.error(e).toString());
+    }
   }
 }
