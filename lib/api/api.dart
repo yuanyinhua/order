@@ -8,7 +8,6 @@ import 'package:m/models/platform_account_data.dart';
 import 'package:m/models/user_info.dart';
 import 'request.dart';
 import 'package:dio/dio.dart';
-import 'package:m/tools/error.dart';
 
 String? _kParamsSceneId;
 

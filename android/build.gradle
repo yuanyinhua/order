@@ -16,6 +16,12 @@ allprojects {
         google()
         mavenCentral()
     }
+    // 输出过时的api
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+        }
+    }
 }
 
 rootProject.buildDir = '../build'
