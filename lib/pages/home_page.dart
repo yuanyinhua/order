@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -42,9 +43,28 @@ class _HomePageState extends State<HomePage> {
   // 定时时间
   DateTime timingTime = DateTime(2021, 10, 2, DateTime.now().hour + 1, 0, 0);
 
+  static const platform = MethodChannel('com.zc.m/battery');
+
+  String _batteryLevel = 'Unknown battery level.';
+
+
+  Future<void> _getBatteryLevel() async {
+    String batteryLevel;
+    try {
+      final int result = await platform.invokeMethod('getBatteryLevel');
+      batteryLevel = "Battery level at $result % .";
+    } on PlatformException catch (e) {
+      batteryLevel = "Failed to get battery level: '${e.toString()}'";
+    }
+    setState(() {
+      _batteryLevel = batteryLevel;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    _getBatteryLevel();
     _updateTasks();
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       runTime ++;
@@ -175,6 +195,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
+      Text(_batteryLevel),
       Expanded(
         child: Container(
             child: LogTableWidget(logDatas),

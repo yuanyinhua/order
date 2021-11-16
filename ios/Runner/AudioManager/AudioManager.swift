@@ -9,6 +9,7 @@ import Foundation
 import AVFoundation
 import UIKit
 
+// 播放无声音乐，让app一直运行在后台
 class AudioManager: NSObject, AVAudioPlayerDelegate
 {
     static let sharedInstance: AudioManager = { AudioManager() }()
