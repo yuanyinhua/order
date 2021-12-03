@@ -44,6 +44,7 @@ class UserInfo extends ChangeNotifier {
   String? get platformAccount => _config.platformAccount;
 
   String? get cookie => _loginInfo?.cookies;
+  String? get userAgent => _loginInfo?.userAgent;
   // 保存配置信息
   saveConfig({
     String? platformAccount,
@@ -78,19 +79,19 @@ class UserInfo extends ChangeNotifier {
 
   // 更新登录信息
   updateLoginInfo(String? cookies,
-      {Map? wechatData, String? activeCode, String? password}) async {
+      {Map? wechatData, String? activeCode, String? password, String? userAgent}) async {
     if (cookies == null || cookies.isEmpty) {
       MyToast.showToast("输入登录信息");
       return;
     }
-    if (Platform.isAndroid && "451601023" != password) {
+    if (Platform.isAndroid && "451601023" != password && kReleaseMode) {
       MyToast.showToast("密码错误");
       return;
     }
     try {
       if (cookies is String && cookies.isNotEmpty) {
         if (!cookies.contains("PHPSESSID")) {
-          cookies = "PHPSESSID=;$cookies";
+          cookies = "$cookies;PHPSESSID=";
         }
         if (!cookies.contains("tbtools")) {
           MyToast.showToast("登录信息不正确");
@@ -105,7 +106,8 @@ class UserInfo extends ChangeNotifier {
       _loginInfo = LoginInfo(
           cookies: cookies,
           weChatData: wechatData as Map<String, dynamic>?,
-          password: password);
+          password: password, 
+          userAgent: userAgent);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
       saveConfig(activeCode: activeCode ?? "");

@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   final _token = TextEditingController();
   final _password = TextEditingController();
-
+  final _userAgent = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -83,6 +83,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   Widget _mainUI(BuildContext context) {
     _token.text = UserInfo().cookie ?? "";
     _password.text = UserInfo().password ?? "";
+    _userAgent.text = UserInfo().userAgent ?? "";
     if (_isWechatLogin) {
       return Container(
         margin: const EdgeInsets.only(left: 20, right: 20, top: 200),
@@ -98,9 +99,15 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
     }
     return GestureDetector(
       child: Container(
-        margin: EdgeInsets.only(left: 20, right: 20, top: _isShowKeyword ? 150 : 200),
+        margin: EdgeInsets.only(
+            left: 20, right: 20, top: _isShowKeyword ? 150 : 200),
         child: Column(
           children: [
+            TextField(
+              obscureText: true,
+              decoration: const InputDecoration(hintText: "输入浏览器标识"),
+              controller: _userAgent,
+            ),
             TextField(
               obscureText: true,
               decoration: const InputDecoration(hintText: "输入登录信息"),
@@ -123,9 +130,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 child: ElevatedButton(
                   onPressed: () {
                     UserInfo().updateLoginInfo(_token.text,
-                        activeCode: _activeInfo, password: _password.text);
+                        activeCode: _activeInfo,
+                        password: _password.text,
+                        userAgent: _userAgent.text);
                   },
-                  child: const Text("登录", style: TextStyle(color: Colors.black87)),
+                  child:
+                      const Text("登录", style: TextStyle(color: Colors.black87)),
                   style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(
                           const Color.fromRGBO(208, 208, 208, 1))),
@@ -193,22 +203,22 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       return;
     }
     _timer ??= Timer.periodic(Duration(milliseconds: (1.5 * 1000).toInt()),
-          (timer) async {
-        if (!_isWechatLogin || !mounted) {
-          return;
+        (timer) async {
+      if (!_isWechatLogin || !mounted) {
+        return;
+      }
+      try {
+        await Api.waitLogin();
+      } catch (e) {
+        _waitScanReqCount += 1;
+        if (_waitScanReqCount > _waitScanreqCountMax) {
+          _waitScanReqCount = 0;
+          _stopWaitLogin();
+          await Future.delayed(const Duration(seconds: 5));
+          _waitLogin();
         }
-        try {
-          await Api.waitLogin();
-        } catch (e) {
-          _waitScanReqCount += 1;
-          if (_waitScanReqCount > _waitScanreqCountMax) {
-            _waitScanReqCount = 0;
-            _stopWaitLogin();
-            await Future.delayed(const Duration(seconds: 5));
-            _waitLogin();
-          }
-        }
-      });
+      }
+    });
   }
 
   void _stopWaitLogin() {
@@ -267,6 +277,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       },
     );
   }
+
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 import 'package:html/parser.dart' show parse;
 
@@ -8,6 +9,7 @@ import 'package:m/models/platform_account_data.dart';
 import 'package:m/models/user_info.dart';
 import 'request.dart';
 import 'package:dio/dio.dart';
+import 'package:m/api/constant.dart';
 
 String? _kParamsSceneId;
 
@@ -101,9 +103,13 @@ class Api {
           params: {"sceneid": _kParamsSceneId});
       if (response is Map) {
         var cookies = await MyWebViewManager().getCookie(wechatData: response);
-        UserInfo()
-            .updateLoginInfo(cookies, wechatData: response, activeCode: "");
+        UserInfo().updateLoginInfo(cookies,
+            wechatData: response,
+            activeCode: "",
+            userAgent: (Platform.isAndroid ? androidUserAgent : iosUserAgent));
         return Future.value();
+      } else {
+        return Future.error("等待扫描");
       }
     } catch (e) {
       return Future.error(e);
@@ -111,9 +117,14 @@ class Api {
   }
 
   static updateConfig() async {
+    // if (kDebugMode) {
+    //   return;
+    // }
     try {
-      var response = await Dio(BaseOptions(connectTimeout: 5000,receiveTimeout: 3000,))
-          .get('https://github.com/baichu123/config/blob/main/config.json');
+      var response = await Dio(BaseOptions(
+        connectTimeout: 5000,
+        receiveTimeout: 3000,
+      )).get('https://github.com/baichu123/config/blob/main/config.json');
       if (response.statusCode == 200) {
         var document = parse(response.data);
         var text = document.getElementsByTagName("table")[0].text.trim();

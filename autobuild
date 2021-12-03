@@ -5,7 +5,7 @@ echo "---------自动打包上传蒲公英---------"
 # dirname $0，进入当前执行的脚本文件的父目录
 cd `dirname $0`
 # 清除构建数据
-flutter clean
+# flutter clean
 # git pull
 flutter pub get
 # 开始ios打包上传蒲公英
@@ -31,4 +31,6 @@ fastlane release
 # 删除打包输出文件
 rm -r ../build/app/outputs
 
-echo "\033[32;1m"安卓和iOS打包并上传蒲公英成功！"\033[0m"
+echo "-------------------------------------"
+echo "-------------------------------------"
+echo "安卓和iOS打包并上传蒲公英成功！"

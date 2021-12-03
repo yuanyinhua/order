@@ -16,9 +16,9 @@ class LoginInfo {
   // 4:"openid" -> "oDUYJ1eQxfM_cc-tVBZFksTIeUlk"
   // 5:"state" -> 1
   Map<String, dynamic>? weChatData;
-
+  String? userAgent;
   String? password;
-  LoginInfo({required this.cookies, this.weChatData, this.password});
+  LoginInfo({required this.cookies, this.weChatData, this.password, this.userAgent});
 
   factory LoginInfo.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
 

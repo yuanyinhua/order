@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> {
 
   static const platform = MethodChannel('com.zc.m/battery');
 
+  // ignore: unused_field
   String _batteryLevel = 'Unknown battery level.';
 
 
@@ -195,7 +196,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
-      Text(_batteryLevel),
       Expanded(
         child: Container(
             child: LogTableWidget(logDatas),

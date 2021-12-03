@@ -29,6 +29,7 @@ class Request {
     final commonParams = {
       'Accept':
           'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+          'User-Agent': UserInfo().userAgent ?? pcUserAgent
     };
     if (path.contains("qrCodePath")) {
       return {
@@ -155,7 +156,7 @@ class Request {
         if (code == 0) {
           return data["data"];
         }
-        String? msg = response.data["msg"];
+        String? msg = data["msg"];
         if (code == -1 && msg != null && msg.contains("操作频繁")) {
           code = -100;
         } else if (code == -99 && msg == null) {

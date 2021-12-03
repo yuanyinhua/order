@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,8 +23,7 @@ class MyWebViewManager {
         visible: false,
         maintainState: true,
         child: WebView(
-          userAgent:
-              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.63 Safari/537.36",
+          userAgent: (Platform.isAndroid ? androidUserAgent : iosUserAgent),
           onWebViewCreated: (WebViewController webViewController) {
             _controller = webViewController;
           },
