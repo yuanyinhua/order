@@ -18,9 +18,18 @@ class LoginInfo {
   Map<String, dynamic>? weChatData;
   String? userAgent;
   String? password;
-  LoginInfo({required this.cookies, this.weChatData, this.password, this.userAgent});
+  String? activeCode;
+  int? lastLoginTime;
 
-  factory LoginInfo.fromJson(Map<String, dynamic> json) => _$LoginFromJson(json);
+  LoginInfo(
+      {required this.cookies,
+      this.weChatData,
+      this.password,
+      this.userAgent,
+      this.lastLoginTime,
+      this.activeCode});
+  factory LoginInfo.fromJson(Map<String, dynamic> json) =>
+      _$LoginFromJson(json);
 
   @override
   String toString() {

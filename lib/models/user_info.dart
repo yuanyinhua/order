@@ -20,7 +20,6 @@ class UserInfo extends ChangeNotifier {
 
   LoginInfo? _loginInfo;
   Config _config = Config(
-      isActive: false,
       platformAccount: "",
       delayTime: 0.5,
       queryDelayTime: 0.3,
@@ -36,28 +35,44 @@ class UserInfo extends ChangeNotifier {
     notifyListeners();
   }
 
+  String? _password;
+  String? _activeCode;
+
   double get delayTime => _config.delayTime;
 
   double get defaultDelayTime => Platform.isAndroid ? 2 : 1.2;
 
-  bool get isActive => _config.isActive;
+  bool isActive = false;
   String? get platformAccount => _config.platformAccount;
 
   String? get cookie => _loginInfo?.cookies;
   String? get userAgent => _loginInfo?.userAgent;
+
+  bool get isShowPassword {
+    if (!Platform.isAndroid) {
+      return false;
+    }
+    return true;
+  }
+
+  bool get isLoginInPast30Days {
+    if (_loginInfo == null || _loginInfo?.lastLoginTime == null) {
+      return false;
+    }
+    return (DateTime.now().millisecond - _loginInfo!.lastLoginTime!) /
+            (1000 * 60 * 60 * 24) >
+        30;
+  }
+
   // 保存配置信息
   saveConfig({
     String? platformAccount,
-    String? activeCode,
     double? delayTime,
     double? queryDelayTime,
     double? defaultDelayTime,
   }) {
     if (platformAccount != null) {
       _config.platformAccount = platformAccount;
-    }
-    if (activeCode != null) {
-      _config.isActive = (activeCode == "10496${DateTime.now().hour}");
     }
     if (delayTime != null) {
       _config.delayTime = delayTime;
@@ -67,6 +82,11 @@ class UserInfo extends ChangeNotifier {
     }
     if (queryDelayTime != null) {
       _config.queryDelayTime = queryDelayTime;
+    }
+    if (delayTime != null &&
+        defaultDelayTime != null &&
+        delayTime > _config.delayTime) {
+      saveDelayTime(delayTime.toString());
     }
     _prefs!.setString("config", _config.toString());
   }
@@ -78,16 +98,11 @@ class UserInfo extends ChangeNotifier {
   }
 
   // 更新登录信息
-  updateLoginInfo(String? cookies,
-      {Map? wechatData, String? activeCode, String? password, String? userAgent}) async {
-    if (cookies == null || cookies.isEmpty) {
-      MyToast.showToast("输入登录信息");
-      return;
-    }
-    if (Platform.isAndroid && "451601023" != password && kReleaseMode) {
-      MyToast.showToast("密码错误");
-      return;
-    }
+  login(String? cookies,
+      {Map? wechatData,
+      String? activeCode,
+      String? password,
+      String? userAgent}) async {
     try {
       if (cookies is String && cookies.isNotEmpty) {
         if (!cookies.contains("PHPSESSID")) {
@@ -101,16 +116,31 @@ class UserInfo extends ChangeNotifier {
         MyToast.showToast("登录信息不正确");
         return;
       }
+      if (cookies.isEmpty) {
+        MyToast.showToast("输入登录信息");
+        return;
+      }
+      if (isShowPassword && (password == null || password.isEmpty)) {
+        MyToast.showToast("请输入密码");
+        return;
+      }
       EasyLoading.show(status: "正在登录...");
-      await Api.updateConfig();
+      await Api.updateConfig(false);
+      if (isShowPassword && _password != password) {
+        EasyLoading.dismiss();
+        MyToast.showToast("密码错误");
+        return;
+      }
+      activeCode ??= _activeCode;
+
       _loginInfo = LoginInfo(
           cookies: cookies,
           weChatData: wechatData as Map<String, dynamic>?,
-          password: password, 
-          userAgent: userAgent);
+          password: password,
+          userAgent: userAgent,
+          activeCode: activeCode);
       isLogin = true;
       _prefs!.setString("loginInfo", _loginInfo.toString());
-      saveConfig(activeCode: activeCode ?? "");
       EasyLoading.dismiss();
     } catch (e) {
       EasyLoading.dismiss();
@@ -126,18 +156,30 @@ class UserInfo extends ChangeNotifier {
       if (prefs.getString("loginInfo") != null) {
         final loginInfo = LoginInfo.fromJson(
             json.decode(prefs.getString("loginInfo") as String));
-        if (!(Platform.isAndroid && loginInfo.password == null)) {
+        if (loginInfo.lastLoginTime == null) {
+          loginInfo.lastLoginTime = DateTime.now().millisecond;
+          _prefs!.setString("loginInfo", _loginInfo.toString());
+        }
+        _updateGithubData();
+        if (Platform.isAndroid) {
+          // 三十天后退出登录
+          if (isLoginInPast30Days || (loginInfo.password != _password)) {
+            isLogin = false;
+          } else {
+            isLogin = true;
+            _loginInfo = loginInfo;
+          }
+        } else {
           _loginInfo = loginInfo;
-          isLogin = true;
         }
       }
       try {
         if (prefs.getString("config") != null) {
-        _config =
-            Config.fromJson(json.decode(prefs.getString("config") as String));
-      } else {
-        _config.delayTime = defaultDelayTime;
-      }
+          _config =
+              Config.fromJson(json.decode(prefs.getString("config") as String));
+        } else {
+          _config.delayTime = defaultDelayTime;
+        }
       } catch (e) {
         _config.minDelayTime = defaultDelayTime;
       }
@@ -145,17 +187,47 @@ class UserInfo extends ChangeNotifier {
     } catch (_) {}
   }
 
+  updateLoginToken(String cookies) {
+    _loginInfo?.cookies = cookies;
+    _prefs?.setString("loginInfo", _loginInfo.toString());
+  }
   // 更新时间配置
-  updateTimeConfig(Map data) {
+  updateTimeConfig(String str, bool checkPassword) {
     try {
+      Map data = jsonDecode(str);
       double delayTime;
       if (Platform.isAndroid) {
         delayTime = (data["android"]["delayTime"] as num).toDouble();
       } else {
         delayTime = (data["delayTime"] as num).toDouble();
       }
+      _prefs?.setString("GithubData", str);
       saveConfig(delayTime: delayTime, defaultDelayTime: delayTime);
-    } catch (_) {}
+      _updateGithubData();
+      // 密码不对退出登录
+      if (Platform.isAndroid &&
+          checkPassword &&
+          (_password != _loginInfo?.password || isLoginInPast30Days)) {
+        _loginInfo?.password = null;
+        _prefs?.setString("loginInfo", _loginInfo.toString());
+        logout();
+      }
+    } catch (e) {
+      // ignore: avoid_print
+      print(e);
+    }
+  }
+
+  // 更新github获取的配置数据
+  _updateGithubData() {
+    String? str = _prefs?.getString("GithubData");
+    if (str == null) {
+      return;
+    }
+    Map data = jsonDecode(str);
+    _password = data["password"];
+    _activeCode = data["activeCode"];
+    isActive = _activeCode == _loginInfo?.activeCode;
   }
 
   // 退出

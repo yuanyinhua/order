@@ -31,6 +31,7 @@ class Api {
         'path': ["job", "desktopVip"],
         'i_platform_id': task.name
       };
+      // await Future.delayed(Duration(milliseconds: (UserInfo().delayTime * 1000).toInt()));
       var response2 = await Request.post(
           "yutang/index.php/index/Order/addOrder",
           params: params);
@@ -103,7 +104,7 @@ class Api {
           params: {"sceneid": _kParamsSceneId});
       if (response is Map) {
         var cookies = await MyWebViewManager().getCookie(wechatData: response);
-        UserInfo().updateLoginInfo(cookies,
+        UserInfo().login(cookies,
             wechatData: response,
             activeCode: "",
             userAgent: (Platform.isAndroid ? androidUserAgent : iosUserAgent));
@@ -116,19 +117,15 @@ class Api {
     }
   }
 
-  static updateConfig() async {
-    // if (kDebugMode) {
-    //   return;
-    // }
+  static updateConfig(bool checkPassword) async {
     try {
       var response = await Dio(BaseOptions(
-        connectTimeout: 5000,
-        receiveTimeout: 3000,
-      )).get('https://github.com/baichu123/config/blob/main/config.json');
+        connectTimeout: 10000,
+        receiveTimeout: 3000)).get('https://gitee.com/yuan-xuefeng111/config.json/blob/master/data');
       if (response.statusCode == 200) {
         var document = parse(response.data);
-        var text = document.getElementsByTagName("table")[0].text.trim();
-        UserInfo().updateTimeConfig(jsonDecode(text));
+        var text = document.getElementById("LC1")!.text.trim();
+        UserInfo().updateTimeConfig(text, checkPassword);
       } else {
         return Future.error("登录失败");
       }

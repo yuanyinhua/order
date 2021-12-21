@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 import 'dart:ui' as ui;
@@ -82,7 +81,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
 
   Widget _mainUI(BuildContext context) {
     _token.text = UserInfo().cookie ?? "";
-    _password.text = UserInfo().password ?? "";
+    // _password.text = UserInfo().password ?? "";
     _userAgent.text = UserInfo().userAgent ?? "";
     if (_isWechatLogin) {
       return Container(
@@ -105,20 +104,16 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           children: [
             TextField(
               obscureText: true,
-              decoration: const InputDecoration(hintText: "输入浏览器标识"),
-              controller: _userAgent,
-            ),
-            TextField(
-              obscureText: true,
               decoration: const InputDecoration(hintText: "输入登录信息"),
               controller: _token,
             ),
             Container(
               height: 10,
             ),
-            if (Platform.isAndroid)
+            if (UserInfo().isShowPassword)
               TextField(
                 obscureText: true,
+                toolbarOptions: const ToolbarOptions(copy: false, cut: false, selectAll: true, paste: true),
                 decoration: const InputDecoration(hintText: "输入密码"),
                 controller: _password,
               ),
@@ -129,7 +124,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 height: 45,
                 child: ElevatedButton(
                   onPressed: () {
-                    UserInfo().updateLoginInfo(_token.text,
+                    UserInfo().login(_token.text,
                         activeCode: _activeInfo,
                         password: _password.text,
                         userAgent: _userAgent.text);
@@ -154,6 +149,22 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
       mainAxisAlignment:
           _isWechatLogin ? MainAxisAlignment.center : MainAxisAlignment.end,
       children: [
+      GestureDetector(
+          child: const SizedBox(
+            height: 40,
+            child: Center(
+              child: Text("UserAgent"),
+            ),
+          ),
+          onTap: () {
+            showAlertDialog(context, "UserAgent", (value) {
+              _userAgent.text = value;
+            }, placeholder: "请输入UserAgent", obscureText: true);
+          },
+        ),
+        Container(
+          width: 20,
+        ),
         GestureDetector(
           child: const SizedBox(
             height: 40,

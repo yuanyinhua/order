@@ -23,36 +23,35 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // 是否定时
-  bool isTiming = false;
+  bool _isTiming = false;
   // 是否运行
-  bool isRun = false;
+  bool _isRun = false;
   // 日志
-  List<PlatformAccountLog> logDatas = [];
+  List<PlatformAccountLog> _logDatas = [];
   // 所有任务
-  List<PlatformAccountData> tasks = [];
+  List<PlatformAccountData> _tasks = [];
   // 完成任务
-  List<PlatformAccountData> completeTasks = [];
+  final List<PlatformAccountData> _completeTasks = [];
   // 等待处理任务
-  List<PlatformAccountData> waitTasks = [];
+  final List<PlatformAccountData> _waitTasks = [];
   // 处理单个任务定时器
-  Timer? taskTimer;
+  Timer? _taskTimer;
   // 处理定时
-  Timer? timer;
-  
-  int runTime = 0;
-  // 定时时间
-  DateTime timingTime = DateTime(2021, 10, 2, DateTime.now().hour + 1, 0, 0);
+  Timer? _timer;
 
-  static const platform = MethodChannel('com.zc.m/battery');
+  int _updateConfigTime = 0;
+  // 定时时间
+  DateTime _timingTime = DateTime(2021, 10, 2, DateTime.now().hour + 1, 0, 0);
+
+  static const _platform = MethodChannel('com.zc.m/battery');
 
   // ignore: unused_field
   String _batteryLevel = 'Unknown battery level.';
 
-
   Future<void> _getBatteryLevel() async {
     String batteryLevel;
     try {
-      final int result = await platform.invokeMethod('getBatteryLevel');
+      final int result = await _platform.invokeMethod('getBatteryLevel');
       batteryLevel = "Battery level at $result % .";
     } on PlatformException catch (e) {
       batteryLevel = "Failed to get battery level: '${e.toString()}'";
@@ -67,14 +66,18 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _getBatteryLevel();
     _updateTasks();
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      runTime ++;
-      if (isTiming) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _updateConfigTime ++;
+      if (_updateConfigTime == 10 * 60) {
+        _updateConfigTime = 0;
+        Api.updateConfig(true);
+      }
+      if (_isTiming) {
         // 执行定时任务
         var time = DateTime.now();
-        if (time.hour == timingTime.hour &&
-            time.minute == timingTime.minute &&
-            time.second == timingTime.second) {
+        if (time.hour == _timingTime.hour &&
+            time.minute == _timingTime.minute &&
+            time.second == _timingTime.second) {
           _start();
           _updateTimingTime();
         }
@@ -86,95 +89,97 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return home(context);
+    return _home(context);
   }
 
   @override
   void dispose() {
-    timer?.cancel();
-    timer = null;
-    taskTimer?.cancel();
-    taskTimer = null;
+    _timer?.cancel();
+    _timer = null;
+    _taskTimer?.cancel();
+    _taskTimer = null;
     super.dispose();
   }
 
   // 运行任务
   _start() {
-    if (!isRun) {
+    if (!_isRun) {
       setState(() {
-        isRun = true;
+        _isRun = true;
       });
     }
-    completeTasks.clear();
-    waitTasks.clear();
-    waitTasks.addAll(tasks);
-    if (taskTimer == null) {
-      runTask();
-      taskTimer = Timer.periodic(
-          Duration(milliseconds: ((UserInfo().delayTime) * 1000).toInt()),
+    _completeTasks.clear();
+    _waitTasks.clear();
+    _waitTasks.addAll(_tasks);
+    if (_taskTimer == null) {
+      _runTask();
+      _taskTimer = Timer.periodic(
+          Duration(milliseconds: ((UserInfo().delayTime - 0.02) * 1000).toInt()),
           (timer) {
-        runTask();
+        _runTask();
       });
     }
   }
 
   _cancel() {
-    taskTimer?.cancel();
-    taskTimer = null;
+    _taskTimer?.cancel();
+    _taskTimer = null;
     _cancelTiming();
     setState(() {
-      isRun = false;
+      _isRun = false;
     });
   }
 
   _cancelTiming() {
     setState(() {
-      isTiming = false;
+      _isTiming = false;
     });
   }
 
   _startTiming() {
     setState(() {
-      isTiming = true;
+      _isTiming = true;
     });
   }
 
   _clearLog() {
     setState(() {
-      logDatas = [];
+      _logDatas = [];
     });
   }
 
-  void runTask() {
-    if (waitTasks.isEmpty) {
+  void _runTask() {
+    if (_waitTasks.isEmpty) {
       return;
     }
-    if (!isRun || waitTasks.isEmpty) {
+    if (!_isRun || _waitTasks.isEmpty) {
       return;
     }
-    final task = waitTasks[0];
-    waitTasks.removeAt(0);
+    final task = _waitTasks[0];
+    _waitTasks.removeAt(0);
     // 更新日志
     void complete(String? result) {
       setState(() {
-        logDatas.insert(0, PlatformAccountLog(accountData: task, log: result));
+        _logDatas.insert(0, PlatformAccountLog(accountData: task, log: result));
       });
     }
 
     // 下单
     Api.createOrder(task).then((value) {
       complete(value);
-      completeTasks.add(task);
+      _completeTasks.add(task);
     }).onError((error, stackTrace) {
-      waitTasks.add(task);
+      if (!error.toString().contains("黑名单")) {
+        _waitTasks.add(task);
+      }
       complete(error.toString());
     });
   }
 
   // 更新任务
   void _updateTasks() {
-    tasks = PlatformAccountData.datasFromString(UserInfo().platformAccount);
-    if (isRun) {
+    _tasks = PlatformAccountData.datasFromString(UserInfo().platformAccount);
+    if (_isRun) {
       _start();
     }
   }
@@ -183,22 +188,23 @@ class _HomePageState extends State<HomePage> {
   void _updateTimingTime() {
     var time = DateTime.now();
     var tempTime = DateTime(time.year, time.month, time.day, time.hour + 1, 0, 0);
-    if (tempTime.hour != timingTime.hour) {
+    if (tempTime.hour != _timingTime.hour) {
       setState(() {
-        timingTime = tempTime;
+        _timingTime = tempTime;
       });
     }
   }
 
+  // 退出
   void _logout() async {
     UserInfo().logout();
   }
 
-  Widget home(BuildContext context) {
+  Widget _home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
       Expanded(
         child: Container(
-            child: LogTableWidget(logDatas),
+            child: LogTableWidget(_logDatas),
             decoration: BoxDecoration(
                 color: Colors.grey[350],
                 border: Border.all(
@@ -206,12 +212,12 @@ class _HomePageState extends State<HomePage> {
                   width: 0.5,
                 ))),
       ),
-      buttonsUI()
+      _buttonsUI()
     ]);
   }
 
-  Widget timeUI() {
-    final time = DateFormat("HH:mm:ss").format(timingTime);
+  Widget _timeUI() {
+    final time = DateFormat("HH:mm:ss").format(_timingTime);
     return Consumer<UserInfo>(builder: (context, userInfo, child) {
       return SizedBox(
         height: 60,
@@ -256,7 +262,7 @@ class _HomePageState extends State<HomePage> {
                       var time =
                           DateTime(2021, 9, 12, times[0], times[1], times[2]);
                       setState(() {
-                        timingTime = time;
+                        _timingTime = time;
                       });
                     } catch (_) {}
                   }, placeholder: "时分秒，例如：10:00:00");
@@ -269,7 +275,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Widget buttonsUI() {
+  Widget _buttonsUI() {
     return Consumer<UserInfo>(
       builder: (context, userInfo, child) {
         return Container(
@@ -277,7 +283,7 @@ class _HomePageState extends State<HomePage> {
           height: 160,
           child: Column(
             children: [
-              timeUI(),
+              _timeUI(),
               Row(
                 children: [
                   Expanded(
@@ -285,8 +291,8 @@ class _HomePageState extends State<HomePage> {
                       width: double.maxFinite,
                       height: 45,
                       child: ButtonWidget(
-                          onPressed: isTiming ? _cancelTiming : _startTiming,
-                          text: isTiming ? "停止定时" : "定时"),
+                          onPressed: _isTiming ? _cancelTiming : _startTiming,
+                          text: _isTiming ? "停止定时" : "定时"),
                     ),
                   ),
                   Container(
@@ -297,8 +303,8 @@ class _HomePageState extends State<HomePage> {
                       width: double.maxFinite,
                       height: 45,
                       child: ButtonWidget(
-                          onPressed: isRun ? _cancel : _start,
-                          text: isRun ? "停止" : "开始"),
+                          onPressed: _isRun ? _cancel : _start,
+                          text: _isRun ? "停止" : "开始"),
                     ),
                   ),
                 ],
@@ -326,6 +332,20 @@ class _HomePageState extends State<HomePage> {
                       width: double.infinity,
                       height: 45,
                       child: ButtonWidget(onPressed: _clearLog, text: "清除日志"),
+                    ),
+                  ),
+                  Container(
+                    width: 5,
+                  ),
+                  Expanded(
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 45,
+                      child: ButtonWidget(onPressed: () {
+                        showAlertDialog(context, "登录信息", (value) {
+                          UserInfo().updateLoginToken(value);
+                        }, placeholder: "请输入登录信息");
+                      }, text: "登录信息"),
                     ),
                   ),
                   if (userInfo.isActive) Container(

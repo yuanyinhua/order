@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:m/components/my_toast.dart';
 import 'package:m/models/platform_account_data.dart';
  
  class LogTableWidget extends StatelessWidget {
@@ -49,9 +51,16 @@ import 'package:m/models/platform_account_data.dart';
             SizedBox(
               height: 30,
               child: Center(
-                child: Text(
-                  item.accountData.name,
-                  textAlign: TextAlign.center,
+                child: GestureDetector(
+                  onLongPress: (){
+                    Clipboard.setData(ClipboardData(text: item.accountData.name));
+                    MyToast.showToast("复制成功");
+                  },
+                  child: Text(
+                    item.accountData.name,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: (item.log ?? "").contains("黑名单") ? Colors.yellow[200] : null),
+                  ),
                 ),
               ),
             ),
@@ -61,6 +70,7 @@ import 'package:m/models/platform_account_data.dart';
               child: Text(
               item.log ?? "",
               textAlign: TextAlign.left,
+              style: TextStyle(color: (item.log ?? "").contains("黑名单") ? Colors.yellow[200] : null),
             ),
             ),
           ])
