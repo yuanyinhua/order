@@ -37,6 +37,7 @@ class MError extends Error {
     } else {
       return err;
     }
+    return null;
   }
 
   static String httpError(int? errorCode) {

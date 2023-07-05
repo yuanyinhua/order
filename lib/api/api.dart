@@ -18,7 +18,7 @@ class Api {
     try {
       var response1 = await _search(task);
       List datas = response1["list"];
-      if (datas is! List || (datas is List && datas.isEmpty)) {
+      if ((datas.isEmpty)) {
         return Future.error("预约失败");
       }
       Map data = datas[Random().nextInt(datas.length)];

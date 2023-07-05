@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -8,11 +6,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-// import 'package:permission_handler/permission_handler.dart';
-
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:m/api/api.dart';
 import 'package:m/models/user_info.dart';
 import 'package:m/models/webview_manager.dart';
@@ -20,6 +16,7 @@ import 'package:m/models/webview_manager.dart';
 import 'package:m/components/alert_dialog.dart';
 import 'package:m/components/loading_widget.dart';
 import 'package:m/components/my_toast.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -51,14 +48,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance?.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _getQrCodeData = null;
-    WidgetsBinding.instance?.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -72,7 +69,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     super.didChangeMetrics();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _isShowKeyword = MediaQuery.of(context).viewInsets.bottom != 0;
       });
@@ -113,7 +110,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             if (UserInfo().isShowPassword)
               TextField(
                 obscureText: true,
-                toolbarOptions: const ToolbarOptions(copy: false, cut: false, selectAll: true, paste: true),
                 decoration: const InputDecoration(hintText: "输入密码"),
                 controller: _password,
               ),
@@ -268,14 +264,14 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
                 await ImageGallerySaver.saveImage(
                     byteData.buffer.asUint8List());
                 // 打开微信
-                launch('weixin://');
+                launchUrlString('weixin://');
               } catch (e) {
                 MyToast.showToast(e.toString());
               }
             },
             child: RepaintBoundary(
               key: _globalKey,
-              child: QrImage(data: snapshot.data!, size: 200),
+              child:  QrImageView(data: snapshot.data!, size: 200),
             ),
           );
         } else {
