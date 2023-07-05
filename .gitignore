@@ -48,3 +48,4 @@ app.*.map.json
 
 /android/fastlane/report.xml
 /ios/fastlane/report.xml
+*.lock
