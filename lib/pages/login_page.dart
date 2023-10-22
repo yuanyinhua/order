@@ -249,7 +249,7 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
           return GestureDetector(
             onTap: () {
               if (kDebugMode) {
-                MyWebViewManager().getCookie();
+                // MyWebViewManager().getCookie();
               }
             },
             onLongPress: () async {

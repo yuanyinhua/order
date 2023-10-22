@@ -22,29 +22,31 @@ class MyWebViewManager {
     return Visibility(
         visible: false,
         maintainState: true,
-        child: WebView(
-          userAgent: (Platform.isAndroid ? androidUserAgent : iosUserAgent),
-          onWebViewCreated: (WebViewController webViewController) {
-            _controller = webViewController;
-          },
-          onPageStarted: (url) {
+        child: Text("12"),
+        // child: WebView(
+        //   userAgent: (Platform.isAndroid ? androidUserAgent : iosUserAgent),
+        //   onWebViewCreated: (WebViewController webViewController) {
+        //     _controller = webViewController;
+        //   },
+        //   onPageStarted: (url) {
 
-          },
-          javascriptChannels: {
-            JavascriptChannel(
-                name: 'tudouApp', //handleName
-                onMessageReceived: (JavascriptMessage message) {
-                }),
-            JavascriptChannel(
-                name: 'JSHandle', //handleName
-                onMessageReceived: (JavascriptMessage message) {
-                }),
-          },
-          javascriptMode: JavascriptMode.unrestricted,
-          onPageFinished: (url) async {
-            _finished = true;
-          },
-        ));
+        //   },
+        //   javascriptChannels: {
+        //     JavascriptChannel(
+        //         name: 'tudouApp', //handleName
+        //         onMessageReceived: (JavascriptMessage message) {
+        //         }),
+        //     JavascriptChannel(
+        //         name: 'JSHandle', //handleName
+        //         onMessageReceived: (JavascriptMessage message) {
+        //         }),
+        //   },
+        //   javascriptMode: JavascriptMode.unrestricted,
+        //   onPageFinished: (url) async {
+        //     _finished = true;
+        //   },
+        // )
+        );
   }
 
   Future getCookie({Map? wechatData}) async {
@@ -59,21 +61,21 @@ class MyWebViewManager {
           await loadUrl(kTestUrl);
         }
       }
-      await _controller!.runJavascriptReturningResult("document.cookie");
+      // await _controller!.runJavascriptReturningResult("document.cookie");
     } catch (_) {
     }
   }
 
   Future loadUrl(String url) async {
     _finished = false;
-    await _controller!.loadUrl(url);
-    await Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (_finished) {
-        return false;
-      }
-      return !true;
-    });
+    // await _controller!.loadUrl(url);
+    // await Future.doWhile(() async {
+    //   await Future.delayed(const Duration(seconds: 1));
+    //   if (_finished) {
+    //     return false;
+    //   }
+    //   return !true;
+    // });
     return Future.value(this);
   }
 
