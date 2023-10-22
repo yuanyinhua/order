@@ -13,6 +13,7 @@ import 'package:m/pages/query_available_page.dart';
 import 'package:m/components/alert_dialog.dart';
 import 'package:m/pages/log_table_widget.dart';
 import 'package:m/components/button_widget.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -33,6 +34,8 @@ class _HomePageState extends State<HomePage> {
   final List<PlatformAccountData> _completeTasks = [];
   // 等待处理任务
   final List<PlatformAccountData> _waitTasks = [];
+  List<Map> _shopDatas = [];
+  Map? _selectedShop;
   // 处理单个任务定时器
   Timer? _taskTimer;
   // 处理定时
@@ -66,7 +69,7 @@ class _HomePageState extends State<HomePage> {
     _getBatteryLevel();
     _updateTasks();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _updateConfigTime ++;
+      _updateConfigTime++;
       if (_updateConfigTime == 10 * 60) {
         _updateConfigTime = 0;
         Api.updateConfig(true);
@@ -113,7 +116,8 @@ class _HomePageState extends State<HomePage> {
     if (_taskTimer == null) {
       _runTask();
       _taskTimer = Timer.periodic(
-          Duration(milliseconds: ((UserInfo().delayTime - 0.02) * 1000).toInt()),
+          Duration(
+              milliseconds: ((UserInfo().delayTime - 0.02) * 1000).toInt()),
           (timer) {
         _runTask();
       });
@@ -164,7 +168,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     // 下单
-    Api.createOrder(task).then((value) {
+    Api.createOrder(task,
+            _selectedShop ?? {})
+        .then((value) {
       complete(value);
       _completeTasks.add(task);
     }).onError((error, stackTrace) {
@@ -186,7 +192,8 @@ class _HomePageState extends State<HomePage> {
   // 更新定时时间
   void _updateTimingTime() {
     var time = DateTime.now();
-    var tempTime = DateTime(time.year, time.month, time.day, time.hour + 1, 0, 0);
+    var tempTime =
+        DateTime(time.year, time.month, time.day, time.hour + 1, 0, 0);
     if (tempTime.hour != _timingTime.hour) {
       setState(() {
         _timingTime = tempTime;
@@ -199,8 +206,58 @@ class _HomePageState extends State<HomePage> {
     UserInfo().logout();
   }
 
+  Future<List<Map>> _getShopItems(String filter) async {
+    try {
+      List<Map> data;
+      if (_shopDatas.isNotEmpty) {
+        data = _shopDatas;
+      } else {
+        data = await Api.getShopDatas();
+        _shopDatas = data;
+      }
+      if (filter.isEmpty) {
+        return data;
+      }
+      List<Map> values = [];
+      for (var item in data) {
+        var name = item["c_name"];
+        if (name is String && name.contains(filter)) {
+          values.add(item);
+        }
+      }
+      return values;
+    } catch (e) {
+      return [];
+    }
+  }
+
   Widget _home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
+      Container(
+        margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+        child: SizedBox(
+        height: 50,
+        child: DropdownSearch<Map>(
+          popupProps: const PopupProps.menu(
+            showSearchBox: true
+          ),
+          asyncItems: (text) => _getShopItems(text),
+          autoValidateMode: AutovalidateMode.always,
+          clearButtonProps: const ClearButtonProps(isVisible: true),
+          dropdownDecoratorProps: const DropDownDecoratorProps(
+            dropdownSearchDecoration: InputDecoration(hintText: "选择店铺"),
+          ),
+          itemAsString: (Map item) => item['c_name'],
+          onChanged: (value) {
+            _selectedShop = value is Map ? value : null;
+          },
+          filterFn: (Map item, filter) {
+            var name = item["c_name"];
+            return name is String && name.contains(filter);
+          },
+        ),
+      ),
+      ),
       Expanded(
         child: Container(
             child: LogTableWidget(_logDatas),
@@ -222,25 +279,25 @@ class _HomePageState extends State<HomePage> {
         height: 60,
         child: Stack(
           children: [
-              GestureDetector(
-                child: SizedBox(
-                  height: 60,
-                  child: Row(
-                    children: [
-                      Text("间隔(秒):${UserInfo().delayTime}",
-                          style: TextStyle(
-                              color: Colors.yellow[200], fontSize: 15)),
-                    ],
-                  ),
+            GestureDetector(
+              child: SizedBox(
+                height: 60,
+                child: Row(
+                  children: [
+                    Text("间隔(秒):${UserInfo().delayTime}",
+                        style:
+                            TextStyle(color: Colors.yellow[200], fontSize: 15)),
+                  ],
                 ),
-                onTap: () {
-                  showAlertDialog(context, "间隔", (val) {
-                    try {
-                      UserInfo().saveDelayTime(val);
-                    } catch (_) {}
-                  }, placeholder: "秒");
-                },
               ),
+              onTap: () {
+                showAlertDialog(context, "间隔", (val) {
+                  try {
+                    UserInfo().saveDelayTime(val);
+                  } catch (_) {}
+                }, placeholder: "秒");
+              },
+            ),
             SizedBox(
               height: 60,
               child: GestureDetector(
@@ -275,82 +332,85 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buttonsUI() {
-    return Consumer<UserInfo>(
-      builder: (context, userInfo, child) {
-        return Container(
-          margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-          height: 160,
-          child: Column(
-            children: [
-              _timeUI(),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      width: double.maxFinite,
-                      height: 45,
-                      child: ButtonWidget(
-                          onPressed: _isTiming ? _cancelTiming : _startTiming,
-                          text: _isTiming ? "停止定时" : "定时"),
+    return Consumer<UserInfo>(builder: (context, userInfo, child) {
+      return Container(
+        margin: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+        height: 160,
+        child: Column(
+          children: [
+            _timeUI(),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    height: 45,
+                    child: ButtonWidget(
+                        onPressed: _isTiming ? _cancelTiming : _startTiming,
+                        text: _isTiming ? "停止定时" : "定时"),
+                  ),
+                ),
+                Container(
+                  width: 10,
+                ),
+                Expanded(
+                  child: SizedBox(
+                    width: double.maxFinite,
+                    height: 45,
+                    child: ButtonWidget(
+                        onPressed: _isRun ? _cancel : _start,
+                        text: _isRun ? "停止" : "开始"),
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              height: 10,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ButtonWidget(
+                      onPressed: _logout,
+                      text: "退出",
                     ),
                   ),
+                ),
+                Container(
+                  width: 5,
+                ),
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ButtonWidget(onPressed: _clearLog, text: "清除日志"),
+                  ),
+                ),
+                Container(
+                  width: 5,
+                ),
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ButtonWidget(
+                        onPressed: () {
+                          showAlertDialog(context, "登录信息", (value) {
+                            UserInfo().updateLoginToken(value);
+                          }, placeholder: "请输入登录信息");
+                        },
+                        text: "登录信息"),
+                  ),
+                ),
+                if (userInfo.isActive)
                   Container(
                     width: 10,
                   ),
+                if (userInfo.isActive)
                   Expanded(
-                    child: SizedBox(
-                      width: double.maxFinite,
-                      height: 45,
-                      child: ButtonWidget(
-                          onPressed: _isRun ? _cancel : _start,
-                          text: _isRun ? "停止" : "开始"),
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                height: 10,
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: ButtonWidget(
-                        onPressed: _logout,
-                        text: "退出",
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 5,
-                  ),
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: ButtonWidget(onPressed: _clearLog, text: "清除日志"),
-                    ),
-                  ),
-                  Container(
-                    width: 5,
-                  ),
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: ButtonWidget(onPressed: () {
-                        showAlertDialog(context, "登录信息", (value) {
-                          UserInfo().updateLoginToken(value);
-                        }, placeholder: "请输入登录信息");
-                      }, text: "登录信息"),
-                    ),
-                  ),
-                  if (userInfo.isActive) Container(
-                    width: 10,
-                  ),
-                  if(userInfo.isActive) Expanded(
                     child: SizedBox(
                       width: double.infinity,
                       height: 45,
@@ -366,29 +426,28 @@ class _HomePageState extends State<HomePage> {
                           text: "查降权"),
                     ),
                   ),
-                  Container(
-                    width: 5,
+                Container(
+                  width: 5,
+                ),
+                Expanded(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: ButtonWidget(
+                        onPressed: () {
+                          showAlertDialog(context, "任务id", (value) {
+                            userInfo.saveConfig(platformAccount: value);
+                            _updateTasks();
+                          }, placeholder: "换行分隔");
+                        },
+                        text: "配置"),
                   ),
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: ButtonWidget(
-                          onPressed: () {
-                            showAlertDialog(context, "任务id", (value) {
-                              userInfo.saveConfig(platformAccount: value);
-                              _updateTasks();
-                            }, placeholder: "换行分隔");
-                          },
-                          text: "配置"),
-                    ),
-                  ),
-                ],
-              )
-            ],
-          ),
-        );
-      }
-    );
+                ),
+              ],
+            )
+          ],
+        ),
+      );
+    });
   }
 }

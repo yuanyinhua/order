@@ -17,6 +17,7 @@ class LoginInfo {
   // 5:"state" -> 1
   Map<String, dynamic>? weChatData;
   String? userAgent;
+  String? userSer;
   String? password;
   String? activeCode;
   int? lastLoginTime;

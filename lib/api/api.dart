@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'package:html/parser.dart' show parse;
@@ -14,29 +15,27 @@ import 'package:m/api/constant.dart';
 String? _kParamsSceneId;
 
 class Api {
-  static Future<String> createOrder(PlatformAccountData task) async {
+  static Future<String> createOrder(PlatformAccountData task, Map shop) async {
     try {
-      var response1 = await _search(task);
-      List datas = response1["list"];
+      var response1 = await _search(task, shop);
+      List datas = response1["yppList"];
       if ((datas.isEmpty)) {
-        return Future.error("预约失败");
+        return Future.error("无预约");
       }
       Map data = datas[Random().nextInt(datas.length)];
       Map<String, dynamic> params = {
-        'c_gender': response1["c_gender"],
-        'c_platform': task.platform.name,
+        'c_platform': shop.isNotEmpty ? shop["c_platform"] : task.platform.name,
         'c_vip_code': task.name,
-        'i_job_id': data["i_job_id"],
-        'i_shop_id': data["i_shop_id"],
-        'path': ["job", "desktopVip"],
-        'i_platform_id': task.name
+        'i_plan_id': data["i_plan_id"],
+        "i_plan_product_id": data["i_plan_product_id"],
+        'i_plan_schedule_id': data["i_plan_schedule_id"]
       };
       // await Future.delayed(Duration(milliseconds: (UserInfo().delayTime * 1000).toInt()));
-      var response2 = await Request.post(
-          "yutang/index.php/index/Order/addOrder",
+      await Request.post(
+          "index.php//ztai/YbpPlanDesktop/readyPlan",
           params: params);
-      jsonDecode(response2);
-      return "预约成功;${data["c_name"]}${data["c_shop_name"]}";
+      Map product = data["product"];
+      return "预约成功;${product["c_product_title"]}";
     } on MError catch (e) {
       return Future.error(e);
     } catch (e) {
@@ -59,17 +58,35 @@ class Api {
   }
 
   // 搜索商品
-  static Future _search(PlatformAccountData task) async {
+  static Future _search(PlatformAccountData task, Map shop) async {
     try {
-      return await Request.post("yutang/index.php/index/Job/getJobByVipCode",
+      return await Request.post("index.php//ztai/YbpPlanDesktop/getPlan",
           params: {
-            "page": 1,
-            "limit": 10,
-            "c_vip_code": task.name,
-            "i_platform_id": task.platform.id,
-            "windowNo": "137be1530135d041807cf5e03365b0cf",
-            "sign": "3c922f937cb3388151463087333abd40",
+            "search": {
+              "i_mode_type": "1",
+              "c_platform": shop.isNotEmpty ? shop["c_platform"] : task.platform.name,
+              "c_vip_code": task.name,
+              if (shop.isNotEmpty) 'i_shop_id' : shop["id"]
+          }
           });
+    } catch (e) {
+      return Future.error(e);
+    }
+  }
+
+  static Future<List<Map>> getShopDatas() async {
+    try {
+      final data = await Request.get("index.php/bas/Oper/dict", params: {
+        'funKey': ["shop"]
+      });
+      var values = data['shop'] is Map ? data["shop"].values : [];
+      List<Map> tvalues = [];
+      for (var item in values) {
+        if (item is Map) {
+          tvalues.add(item);
+        }
+      }
+      return tvalues;
     } catch (e) {
       return Future.error(e);
     }

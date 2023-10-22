@@ -27,8 +27,7 @@ String _kParamsWindowNo = "";
 class Request {
   static Map<String, dynamic> _headers(String path) {
     final commonParams = {
-      'Accept':
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'Accept':'application/json, text/plain, */*',
       'User-Agent': UserInfo().userAgent ?? pcUserAgent
     };
     if (path.contains("qrCodePath")) {
@@ -49,11 +48,9 @@ class Request {
       };
     }
     return {
-      'Accept': 'application/json, text/javascript, */*; q=0.01',
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'Connection': 'Keep-Alive',
-      if (UserInfo().isLogin) 'Cookie': UserInfo().cookie ?? "",
+      'Accept': 'application/json, text/plain, */*',
+      'Content-Type': 'application/json;charset=utf-8',
+      if (UserInfo().isLogin) 'ser': UserInfo().cookie ?? "",
       ...commonParams
     };
   }
@@ -103,13 +100,13 @@ class Request {
   // 参数处理
   static FormData _requestParams(params, String path) {
     var formData = params != null ? FormData.fromMap(params) : FormData();
-    if (params != null) {
-      if (_kParamsWindowNo.isNotEmpty) {
-        formData.fields
-            .add(MapEntry("sign", _sign(params?["i_platform_id"] ?? 1)));
-        formData.fields.add(MapEntry("windowNo", _kParamsWindowNo));
-      }
-    }
+    // if (params != null) {
+    //   if (_kParamsWindowNo.isNotEmpty) {
+    //     formData.fields
+    //         .add(MapEntry("sign", _sign(params?["i_platform_id"] ?? 1)));
+    //     formData.fields.add(MapEntry("windowNo", _kParamsWindowNo));
+    //   }
+    // }
     return formData;
   }
 
@@ -157,7 +154,7 @@ class Request {
           return data["data"];
         }
         String? msg = data["msg"];
-        if (msg != null && msg.isNotEmpty && msg.substring(msg.length - 1, msg.length) == "。") {
+        if (msg is String && msg.isNotEmpty && msg.substring(msg.length - 1, msg.length) == "。") {
           msg = msg.substring(0, msg.length - 1);
         }
         if (code == -1 && msg != null && msg.contains("操作频繁")) {
@@ -210,7 +207,7 @@ class Request {
   }
 
   static Future post(String path, {Map<String, dynamic>? params}) async {
-    await server();
+    // await server();
     return _request(path, 'post', params: params);
   }
 

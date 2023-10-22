@@ -77,9 +77,12 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
   }
 
   Widget _mainUI(BuildContext context) {
-    _token.text = UserInfo().cookie ?? "";
+    if (_token.text == '') {
+       _token.text = UserInfo().cookie ?? "";
+    }
     // _password.text = UserInfo().password ?? "";
     _userAgent.text = UserInfo().userAgent ?? "";
+
     if (_isWechatLogin) {
       return Container(
         margin: const EdgeInsets.only(left: 20, right: 20, top: 200),
@@ -103,6 +106,9 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
               obscureText: true,
               decoration: const InputDecoration(hintText: "输入登录信息"),
               controller: _token,
+            ),
+            Container(
+              height: 10,
             ),
             Container(
               height: 10,
@@ -177,20 +183,20 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
         Container(
           width: 20,
         ),
-        GestureDetector(
-          child: SizedBox(
-            height: 40,
-            child: Center(
-              child: Text(_isWechatLogin ? "手动登录" : "微信登录"),
-            ),
-          ),
-          onTap: () {
-            setState(() {
-              _isWechatLogin = !_isWechatLogin;
-              _isWechatLogin ? _waitLogin() : _stopWaitLogin();
-            });
-          },
-        ),
+        // GestureDetector(
+        //   child: SizedBox(
+        //     height: 40,
+        //     child: Center(
+        //       child: Text(_isWechatLogin ? "手动登录" : "微信登录"),
+        //     ),
+        //   ),
+        //   onTap: () {
+        //     setState(() {
+        //       _isWechatLogin = !_isWechatLogin;
+        //       _isWechatLogin ? _waitLogin() : _stopWaitLogin();
+        //     });
+        //   },
+        // ),
       ],
     );
   }

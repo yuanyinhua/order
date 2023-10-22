@@ -47,7 +47,7 @@ class UserInfo extends ChangeNotifier {
 
   String? get cookie => _loginInfo?.cookies;
   String? get userAgent => _loginInfo?.userAgent;
-
+  String? get userSer => _loginInfo?.userSer;
   bool get isShowPassword {
     if (!Platform.isAndroid) {
       return false;
@@ -98,26 +98,14 @@ class UserInfo extends ChangeNotifier {
   }
 
   // 更新登录信息
-  login(String? cookies,
+  login(String cookies,
       {Map? wechatData,
       String? activeCode,
       String? password,
       String? userAgent}) async {
     try {
-      if (cookies is String && cookies.isNotEmpty) {
-        if (!cookies.contains("PHPSESSID")) {
-          cookies = "$cookies;PHPSESSID=";
-        }
-        if (!cookies.contains("tbtools")) {
-          MyToast.showToast("登录信息不正确");
-          return;
-        }
-      } else {
-        MyToast.showToast("登录信息不正确");
-        return;
-      }
-      if (cookies.isEmpty) {
-        MyToast.showToast("输入登录信息");
+      if (cookies == "") {
+        MyToast.showToast("请输入登陆信息");
         return;
       }
       if (isShowPassword && (password == null || password.isEmpty)) {
