@@ -16,11 +16,13 @@ class Config {
 
   double minDelayTime;
 
+  String? filterDataIds;
   Config(
       {this.platformAccount,
       required this.delayTime,
       required this.queryDelayTime,
-      required this.minDelayTime});
+      required this.minDelayTime,
+      this.filterDataIds});
 
   factory Config.fromJson(Map<String, dynamic> json) => _$ConfigFromJson(json);
 

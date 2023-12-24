@@ -44,6 +44,7 @@ class UserInfo extends ChangeNotifier {
 
   bool isActive = false;
   String? get platformAccount => _config.platformAccount;
+  String get filterDataIds => _config.filterDataIds ?? "";
 
   String? get cookie => _loginInfo?.cookies;
   String? get userAgent => _loginInfo?.userAgent;
@@ -70,12 +71,17 @@ class UserInfo extends ChangeNotifier {
     double? delayTime,
     double? queryDelayTime,
     double? defaultDelayTime,
+    String? filterDataIds,
   }) {
+
     if (platformAccount != null) {
       _config.platformAccount = platformAccount;
     }
     if (delayTime != null) {
       _config.delayTime = delayTime;
+    }
+    if (filterDataIds != null) {
+      _config.filterDataIds = filterDataIds;
     }
     if (defaultDelayTime != null) {
       _config.minDelayTime = defaultDelayTime;
@@ -190,8 +196,10 @@ class UserInfo extends ChangeNotifier {
         delayTime = (data["delayTime"] as num).toDouble();
       }
       _prefs?.setString("GithubData", str);
-      saveConfig(delayTime: delayTime, defaultDelayTime: delayTime);
       _updateGithubData();
+      if (!isActive) {
+        saveConfig(delayTime: delayTime, defaultDelayTime: delayTime);
+      }
       // 密码不对退出登录
       if (Platform.isAndroid &&
           checkPassword &&

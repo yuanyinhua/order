@@ -168,9 +168,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     // 下单
-    Api.createOrder(task,
-            _selectedShop ?? {})
-        .then((value) {
+    Api.createOrder(task, _selectedShop ?? {}).then((value) {
       complete(value);
       _completeTasks.add(task);
     }).onError((error, stackTrace) {
@@ -236,27 +234,25 @@ class _HomePageState extends State<HomePage> {
       Container(
         margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
         child: SizedBox(
-        height: 50,
-        child: DropdownSearch<Map>(
-          popupProps: const PopupProps.menu(
-            showSearchBox: true
+          height: 50,
+          child: DropdownSearch<Map>(
+            popupProps: const PopupProps.menu(showSearchBox: true),
+            asyncItems: (text) => _getShopItems(text),
+            autoValidateMode: AutovalidateMode.always,
+            clearButtonProps: const ClearButtonProps(isVisible: true),
+            dropdownDecoratorProps: const DropDownDecoratorProps(
+              dropdownSearchDecoration: InputDecoration(hintText: "选择店铺"),
+            ),
+            itemAsString: (Map item) => item['c_name'],
+            onChanged: (value) {
+              _selectedShop = value is Map ? value : null;
+            },
+            filterFn: (Map item, filter) {
+              var name = item["c_name"];
+              return name is String && name.contains(filter);
+            },
           ),
-          asyncItems: (text) => _getShopItems(text),
-          autoValidateMode: AutovalidateMode.always,
-          clearButtonProps: const ClearButtonProps(isVisible: true),
-          dropdownDecoratorProps: const DropDownDecoratorProps(
-            dropdownSearchDecoration: InputDecoration(hintText: "选择店铺"),
-          ),
-          itemAsString: (Map item) => item['c_name'],
-          onChanged: (value) {
-            _selectedShop = value is Map ? value : null;
-          },
-          filterFn: (Map item, filter) {
-            var name = item["c_name"];
-            return name is String && name.contains(filter);
-          },
         ),
-      ),
       ),
       Expanded(
         child: Container(
@@ -434,13 +430,42 @@ class _HomePageState extends State<HomePage> {
                     width: double.infinity,
                     height: 45,
                     child: ButtonWidget(
-                        onPressed: () {
-                          showAlertDialog(context, "任务id", (value) {
-                            userInfo.saveConfig(platformAccount: value);
-                            _updateTasks();
-                          }, placeholder: "换行分隔");
-                        },
-                        text: "配置"),
+                      text: "配置",
+                      onPressed: () {
+                        showModalBottomSheet(
+                            context: context,
+                            builder: (context1) => SizedBox.expand(
+                              child: SingleChildScrollView(
+                                primary: true,
+                                child: SafeArea(
+                                  bottom: false,
+                                  child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      title: const Text("任务id"),
+                                      onTap: () =>  showAlertDialog(context, "任务id", (value) {
+                                        userInfo.saveConfig(
+                                            platformAccount: value);
+                                        _updateTasks();
+                                      }, placeholder: "换行分隔"),
+                                    ),
+                                    ListTile(
+                                     title: const Text("过滤数据id"),
+                                     onTap: () => showAlertDialog(context, "过滤数据id", (value) {
+                                        userInfo.saveConfig(
+                                            filterDataIds: value);
+                                        _updateTasks();
+                                      }, placeholder: "换行分隔"),
+                                    )
+                                  ],
+                                ),
+                                )
+                              ),
+                            ));
+                      },
+                    ),
                   ),
                 ),
               ],

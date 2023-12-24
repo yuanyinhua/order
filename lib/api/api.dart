@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 import 'package:html/parser.dart' show parse;
@@ -19,6 +17,12 @@ class Api {
     try {
       var response1 = await _search(task, shop);
       List datas = response1["yppList"];
+      if (datas.isNotEmpty) {
+        datas = datas.where((element) => element["check_lv"] == -1).toList();
+      }
+      if (datas.isNotEmpty && UserInfo().filterDataIds.isNotEmpty) {
+        datas = datas.where((element) => !UserInfo().filterDataIds.contains(element["c_product_id"])).toList();
+      }
       if ((datas.isEmpty)) {
         return Future.error("无预约");
       }
