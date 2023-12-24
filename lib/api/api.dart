@@ -21,7 +21,7 @@ class Api {
         datas = datas.where((element) => element["check_lv"] == -1).toList();
       }
       if (datas.isNotEmpty && UserInfo().filterDataIds.isNotEmpty) {
-        datas = datas.where((element) => !UserInfo().filterDataIds.contains(element["c_product_id"])).toList();
+        datas = datas.where((element) => !UserInfo().filterDataIds.contains(element["product"]["c_product_id"])).toList();
       }
       if ((datas.isEmpty)) {
         return Future.error("无预约");
