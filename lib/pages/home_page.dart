@@ -3,12 +3,12 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:m/api/constant.dart';
 import 'package:provider/provider.dart';
 
 import 'package:m/api/api.dart';
 import 'package:m/models/platform_account_data.dart';
 import 'package:m/models/user_info.dart';
-import 'package:m/pages/query_available_page.dart';
 
 import 'package:m/components/alert_dialog.dart';
 import 'package:m/pages/log_table_widget.dart';
@@ -16,14 +16,18 @@ import 'package:m/components/button_widget.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final String baseUrl;
+
+  const HomePage({Key? key, required this.baseUrl}) : super(key: key);
   @override
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin {
+  
+  String get _baseUrl => widget.baseUrl;
   // 是否定时
-  bool _isTiming = false;
+  bool _isTiming = false; 
   // 是否运行
   bool _isRun = false;
   // 日志
@@ -66,7 +70,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _getBatteryLevel();
+    // _getBatteryLevel();
     _updateTasks();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _updateConfigTime++;
@@ -91,6 +95,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return _home(context);
   }
 
@@ -168,7 +173,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     // 下单
-    Api.createOrder(task, _selectedShop ?? {}).then((value) {
+    Api.createOrder(_baseUrl, task, _selectedShop ?? {}).then((value) {
       complete(value);
       _completeTasks.add(task);
     }).onError((error, stackTrace) {
@@ -210,7 +215,7 @@ class _HomePageState extends State<HomePage> {
       if (_shopDatas.isNotEmpty) {
         data = _shopDatas;
       } else {
-        data = await Api.getShopDatas();
+        data = await Api.getShopDatas(_baseUrl);
         _shopDatas = data;
       }
       if (filter.isEmpty) {
@@ -231,7 +236,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
-      Container(
+      if (UserInfo().isActive) 
+        Container(
         margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
         child: SizedBox(
           height: 50,
@@ -395,33 +401,33 @@ class _HomePageState extends State<HomePage> {
                     child: ButtonWidget(
                         onPressed: () {
                           showAlertDialog(context, "登录信息", (value) {
-                            UserInfo().updateLoginToken(value);
+                            UserInfo().updateLoginToken(value, _baseUrl);
                           }, placeholder: "请输入登录信息");
                         },
                         text: "登录信息"),
                   ),
                 ),
-                if (userInfo.isActive)
-                  Container(
-                    width: 10,
-                  ),
-                if (userInfo.isActive)
-                  Expanded(
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: ButtonWidget(
-                          onPressed: () {
-                            showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (context) {
-                                  return const QueryAvailablePage();
-                                });
-                          },
-                          text: "查降权"),
-                    ),
-                  ),
+                // if (userInfo.isActive)
+                //   Container(
+                //     width: 10,
+                //   ),
+                // if (userInfo.isActive)
+                //   Expanded(
+                //     child: SizedBox(
+                //       width: double.infinity,
+                //       height: 45,
+                //       child: ButtonWidget(
+                //           onPressed: () {
+                //             showModalBottomSheet(
+                //                 context: context,
+                //                 isScrollControlled: true,
+                //                 builder: (context) {
+                //                   return const QueryAvailablePage();
+                //                 });
+                //           },
+                //           text: "查降权"),
+                //     ),
+                //   ),
                 Container(
                   width: 5,
                 ),
@@ -475,4 +481,7 @@ class _HomePageState extends State<HomePage> {
       );
     });
   }
+  
+  @override
+  bool get wantKeepAlive => true;
 }

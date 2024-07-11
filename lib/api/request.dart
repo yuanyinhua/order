@@ -1,15 +1,22 @@
+import 'dart:ffi';
+
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
 import 'package:m/models/user_info.dart';
 import 'package:m/tools/error.dart';
-import 'package:m/tools/big_int.dart';
 import 'constant.dart';
 
 // 创建 Dio 实例
-Dio _dio = Dio(BaseOptions(
-  baseUrl: kBaseUrl,
+Dio _qifengDio = Dio(BaseOptions(
+  baseUrl: kBaseQifengUrl,
+  connectTimeout: 5000,
+  receiveTimeout: 3000,
+));
+
+Dio _qiziDio = Dio(BaseOptions(
+  baseUrl: kBaseQiziUrl,
   connectTimeout: 5000,
   receiveTimeout: 3000,
 ));
@@ -25,7 +32,7 @@ String _kParamsSecret = "";
 String _kParamsWindowNo = "";
 
 class Request {
-  static Map<String, dynamic> _headers(String path) {
+  static Map<String, dynamic> _headers(String path, String? cookie) {
     final commonParams = {
       'Accept':'application/json, text/plain, */*',
       'User-Agent': UserInfo().userAgent ?? pcUserAgent
@@ -50,7 +57,7 @@ class Request {
     return {
       'Accept': 'application/json, text/plain, */*',
       'Content-Type': 'application/json;charset=utf-8',
-      if (UserInfo().isLogin) 'ser': UserInfo().cookie ?? "",
+      if (cookie is String) 'ser': cookie,
       ...commonParams
     };
   }
@@ -126,11 +133,11 @@ class Request {
   }
 
   // 请求入口
-  static Future _request(String path, String method,
+  static Future _request(String baseUrl, String path, String method,
       {Map<String, dynamic>? params}) async {
     try {
       final isWx = path.contains("wx/");
-      final dio = isWx ? _wxDio : _dio;
+      final dio = isWx ? _wxDio : (baseUrl.contains(kBaseQiziUrl)  ? _qiziDio : _qifengDio);
       dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
           return handler.next(options);
@@ -138,7 +145,7 @@ class Request {
       ));
       final options = isWx
           ? Options(method: method)
-          : Options(method: method, headers: _headers(path));
+          : Options(method: method, headers: _headers(path, baseUrl.contains(kBaseQiziUrl) ? UserInfo().cookie : UserInfo().qifengCookies));
       var response = await dio.request('/$path',
           data: _requestParams(params, path), options: options);
       if (response.statusCode == 200) {
@@ -161,6 +168,11 @@ class Request {
           code = -100;
         } else if (code == -99 && msg == null) {
           msg = "服务异常";
+        } else if (code == -4) {
+          var msgData = data["data"]?["vipCodeCheck"];
+          if (msgData is List) {
+            msg = msgData.map((e) => e["c_msg"]).join("\n");
+          }
         }
         return Future.error(MError(code, msg));
       } else {
@@ -174,45 +186,44 @@ class Request {
   }
 
 
-  static server() async {
-    if (_kParamsWindowNo.isNotEmpty) {
-      return Future.value();
-    }
-    try {
-      var g = "2";
-      var p =
-          "1060250871334882992391293512479216326438167258746469805890028339770628303789813787064911279666129";
-      var bigIntObj = MyBigInt();
-      var biga = bigIntObj.randBigInt(100, 0);
-      var bigp = bigIntObj.str2bigInt(p, 10, 0);
-      var bigg = bigIntObj.str2bigInt(g, 10, 0);
-      var A = bigIntObj.powMod(bigg, biga, bigp);
-      var strA = bigIntObj.bigInt2str(A, 10);
-      var timestamp = DateTime.now().millisecondsSinceEpoch;
-      var content = const Utf8Encoder().convert(timestamp.toString());
-      var windowNo = md5.convert(content).toString();
+  // static server() async {
+  //   if (_kParamsWindowNo.isNotEmpty) {
+  //     return Future.value();
+  //   }
+  //   try {
+  //     var g = "2";
+  //     var p =
+  //         "1060250871334882992391293512479216326438167258746469805890028339770628303789813787064911279666129";
+  //     var bigIntObj = MyBigInt();
+  //     var biga = bigIntObj.randBigInt(100, 0);
+  //     var bigp = bigIntObj.str2bigInt(p, 10, 0);
+  //     var bigg = bigIntObj.str2bigInt(g, 10, 0);
+  //     var A = bigIntObj.powMod(bigg, biga, bigp);
+  //     var strA = bigIntObj.bigInt2str(A, 10);
+  //     var timestamp = DateTime.now().millisecondsSinceEpoch;
+  //     var content = const Utf8Encoder().convert(timestamp.toString());
+  //     var windowNo = md5.convert(content).toString();
 
-      var session = await _request("yutang/index.php/bas/Sign/server", 'post',
-          params: {'A': strA, 'windowNo': windowNo});
+  //     var session = await _request("yutang/index.php/bas/Sign/server", 'post',
+  //         params: {'A': strA, 'windowNo': windowNo});
 
-      var B = bigIntObj.str2bigInt(session["B"], 10, 0);
-      var secret = bigIntObj.powMod(B, biga, bigp);
-      secret = bigIntObj.bigInt2str(secret, 10);
-      secret += ',';
-      _kParamsWindowNo = windowNo;
-      _kParamsSecret = secret;
-    } catch (e) {
-      return Future.error(e);
-    }
+  //     var B = bigIntObj.str2bigInt(session["B"], 10, 0);
+  //     var secret = bigIntObj.powMod(B, biga, bigp);
+  //     secret = bigIntObj.bigInt2str(secret, 10);
+  //     secret += ',';
+  //     _kParamsWindowNo = windowNo;
+  //     _kParamsSecret = secret;
+  //   } catch (e) {
+  //     return Future.error(e);
+  //   }
+  // }
+
+  static Future post(String baseUrl, String path, {Map<String, dynamic>? params}) async {
+    return _request(baseUrl, path, 'post', params: params);
   }
 
-  static Future post(String path, {Map<String, dynamic>? params}) async {
-    // await server();
-    return _request(path, 'post', params: params);
-  }
-
-  static Future get(String path, {Map<String, dynamic>? params}) async {
-    return _request(path, 'get', params: params);
+  static Future get(String baseUrl, String path, {Map<String, dynamic>? params}) async {
+    return _request(baseUrl, path, 'get', params: params);
   }
 
 }

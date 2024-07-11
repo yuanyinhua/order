@@ -7,7 +7,8 @@ part of 'login.dart';
 // **************************************************************************
 
 LoginInfo _$LoginFromJson(Map<String, dynamic> json) => LoginInfo(
-      cookies: json['cookies'] as String,
+      cookies: json['cookies'] as String?,
+      qifengCookies: json['qifengCookies'] as String?,
       weChatData: json['weChatData'] as Map<String, dynamic>?,
       password: json['password'] as String?,
       userAgent: json['userAgent'] as String?,
@@ -17,6 +18,7 @@ LoginInfo _$LoginFromJson(Map<String, dynamic> json) => LoginInfo(
 
 Map<String, dynamic> _$LoginToJson(LoginInfo instance) => <String, dynamic>{
       'cookies': instance.cookies,
+      'qifengCookies': instance.qifengCookies,
       'weChatData': instance.weChatData,
       'password': instance.password,
       'userAgent': instance.userAgent,

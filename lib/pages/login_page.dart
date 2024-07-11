@@ -100,14 +100,6 @@ class _LoginPageState extends State<LoginPage> with WidgetsBindingObserver {
             left: 20, right: 20, top: _isShowKeyword ? 150 : 200),
         child: Column(
           children: [
-            TextField(
-              obscureText: true,
-              decoration: const InputDecoration(hintText: "输入登录信息"),
-              controller: _token,
-            ),
-            Container(
-              height: 10,
-            ),
             Container(
               height: 10,
             ),

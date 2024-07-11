@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:m/api/constant.dart';
 import 'package:provider/provider.dart';
 import 'package:m/api/api.dart';
 
 import 'package:m/models/user_info.dart';
 import 'package:m/components/loading_widget.dart';
+import 'package:m/pages/home_bottomnavigationbar_page.dart';
 
 import 'home_page.dart';
 import 'login_page.dart';
@@ -46,7 +48,7 @@ class _RootPageState extends State<RootPage> {
                   }
                   return Consumer<UserInfo>(
                       builder: (context, userInfo, child) {
-                    return userInfo.isLogin ? const HomePage() : const LoginPage();
+                    return userInfo.isLogin ? const HomeBottomNavigationBarPage() : const LoginPage();
                   });
                 }),
           ),

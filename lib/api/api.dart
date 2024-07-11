@@ -13,12 +13,15 @@ import 'package:m/api/constant.dart';
 String? _kParamsSceneId;
 
 class Api {
-  static Future<String> createOrder(PlatformAccountData task, Map shop) async {
+  static Future<String> createOrder(String baseUrl, PlatformAccountData task, Map shop) async {
     try {
-      var response1 = await _search(task, shop);
+      var response1 = await _search(baseUrl, task, shop);
       List datas = response1["yppList"];
       if (datas.isNotEmpty) {
-        datas = datas.where((element) => element["check_lv"] == -1).toList();
+        List tmpDatas = datas.where((element) => element["check_lv"] == -1).toList();
+        if (tmpDatas.isNotEmpty) {
+          datas = tmpDatas;
+        }
       }
       if (datas.isNotEmpty && UserInfo().filterDataIds.isNotEmpty) {
         datas = datas.where((element) => !UserInfo().filterDataIds.contains(element["product"]["c_product_id"])).toList();
@@ -36,7 +39,7 @@ class Api {
       };
       // await Future.delayed(Duration(milliseconds: (UserInfo().delayTime * 1000).toInt()));
       await Request.post(
-          "index.php//ztai/YbpPlanDesktop/readyPlan",
+          baseUrl, "index.php//ztai/YbpPlanDesktop/readyPlan",
           params: params);
       Map product = data["product"];
       return "预约成功;${product["c_product_title"]}";
@@ -49,7 +52,7 @@ class Api {
 
   static Future queryTaskAvailable(PlatformAccountData task) async {
     try {
-      await Request.post("yutang/index.php/toolsapi/ToolsApi/queryVipCode",
+      await Request.post(kBaseQiziUrl, "yutang/index.php/toolsapi/ToolsApi/queryVipCode",
           params: {
             "c_vip_code": task.name,
             "api": "getVipCodeDown",
@@ -62,9 +65,9 @@ class Api {
   }
 
   // 搜索商品
-  static Future _search(PlatformAccountData task, Map shop) async {
+  static Future _search(String baseUrl, PlatformAccountData task, Map shop) async {
     try {
-      return await Request.post("index.php//ztai/YbpPlanDesktop/getPlan",
+      return await Request.post(baseUrl, "index.php//ztai/YbpPlanDesktop/getPlan",
           params: {
             "search": {
               "i_mode_type": "1",
@@ -78,9 +81,9 @@ class Api {
     }
   }
 
-  static Future<List<Map>> getShopDatas() async {
+  static Future<List<Map>> getShopDatas(String baseUrl) async {
     try {
-      final data = await Request.get("index.php/bas/Oper/dict", params: {
+      final data = await Request.get(baseUrl, "index.php/bas/Oper/dict", params: {
         'funKey': ["shop"]
       });
       var values = data['shop'] is Map ? data["shop"].values : [];
@@ -109,7 +112,7 @@ class Api {
   static Future<String?> qrCodeData() async {
     try {
       var response = await Request.get(
-          "tbtools/index.php/index/Wechat/qrCodePath?indexUrl=/yutang/");
+          kBaseQiziUrl, "tbtools/index.php/index/Wechat/qrCodePath?indexUrl=/yutang/");
       _kParamsSceneId =
           parse(response).getElementById("sceneid")?.attributes["value"] ?? "";
       return "https://wxgzh.cklerp.com/yt/auth?sceneid=$_kParamsSceneId";
@@ -121,7 +124,7 @@ class Api {
   static Future waitLogin() async {
     // 等待扫描
     try {
-      var response = await Request.post("wx/qrcode.status",
+      var response = await Request.post(kBaseQiziUrl, "wx/qrcode.status",
           params: {"sceneid": _kParamsSceneId});
       if (response is Map) {
         var cookies = await MyWebViewManager().getCookie(wechatData: response);

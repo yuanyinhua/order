@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
+import 'package:m/api/constant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:m/api/api.dart';
 import 'package:m/components/my_toast.dart';
@@ -28,6 +29,7 @@ class UserInfo extends ChangeNotifier {
   SharedPreferences? _prefs;
   // 是否登录
   bool _isLogin = false;
+
   String? get password => _loginInfo?.password;
   bool get isLogin => _isLogin;
   set isLogin(bool val) {
@@ -40,13 +42,14 @@ class UserInfo extends ChangeNotifier {
 
   double get delayTime => _config.delayTime;
 
-  double get defaultDelayTime => Platform.isAndroid ? 2 : 1.2;
+  double get defaultDelayTime => Platform.isAndroid ? 5 : 1.2;
 
   bool isActive = false;
   String? get platformAccount => _config.platformAccount;
   String get filterDataIds => _config.filterDataIds ?? "";
 
   String? get cookie => _loginInfo?.cookies;
+  String? get qifengCookies => _loginInfo?.qifengCookies;
   String? get userAgent => _loginInfo?.userAgent;
   String? get userSer => _loginInfo?.userSer;
   bool get isShowPassword {
@@ -104,16 +107,12 @@ class UserInfo extends ChangeNotifier {
   }
 
   // 更新登录信息
-  login(String cookies,
+  login(String? cookies,
       {Map? wechatData,
       String? activeCode,
       String? password,
       String? userAgent}) async {
     try {
-      if (cookies == "") {
-        MyToast.showToast("请输入登陆信息");
-        return;
-      }
       if (isShowPassword && (password == null || password.isEmpty)) {
         MyToast.showToast("请输入密码");
         return;
@@ -128,7 +127,8 @@ class UserInfo extends ChangeNotifier {
       activeCode ??= _activeCode;
 
       _loginInfo = LoginInfo(
-          cookies: cookies,
+          cookies: _loginInfo?.cookies,
+          qifengCookies: _loginInfo?.qifengCookies,
           weChatData: wechatData as Map<String, dynamic>?,
           password: password,
           userAgent: userAgent,
@@ -157,12 +157,12 @@ class UserInfo extends ChangeNotifier {
         _updateGithubData();
         if (Platform.isAndroid) {
           // 三十天后退出登录
-          if (isLoginInPast30Days || (loginInfo.password != _password)) {
-            isLogin = false;
-          } else {
-            isLogin = true;
+          // if (isLoginInPast30Days || (loginInfo.password != _password)) {
+          //   isLogin = false;
+          // } else {
+            // isLogin = true;
             _loginInfo = loginInfo;
-          }
+          // }
         } else {
           _loginInfo = loginInfo;
         }
@@ -181,10 +181,15 @@ class UserInfo extends ChangeNotifier {
     } catch (_) {}
   }
 
-  updateLoginToken(String cookies) {
-    _loginInfo?.cookies = cookies;
+  updateLoginToken(String cookies, String baseUrl) {
+    if (baseUrl.contains(kBaseQifengUrl)) {
+      _loginInfo?.qifengCookies = cookies;
+    } else {
+      _loginInfo?.cookies = cookies;
+    }
     _prefs?.setString("loginInfo", _loginInfo.toString());
   }
+
   // 更新时间配置
   updateTimeConfig(String str, bool checkPassword) {
     try {

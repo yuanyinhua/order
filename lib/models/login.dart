@@ -7,7 +7,8 @@ part 'login.g.dart';
 @JsonSerializable()
 class LoginInfo {
   // 登录后获取，调接口有用
-  String cookies;
+  String? cookies;
+  String? qifengCookies;
   // 微信扫码数据
   //"headimgurl" -> "http://thirdwx.qlogo.cn/mmopen/jRoggJ2RF3AicRexNWO1lthpbDfm5icqKBG9avs0CDlEs49CSIEnzvPza1H5GibemAkmbxpe4LGmBzQpJSFzEFcE4LakSQkzi…"
   // 1:"location" -> "中国-湖南-长沙"
@@ -23,7 +24,8 @@ class LoginInfo {
   int? lastLoginTime;
 
   LoginInfo(
-      {required this.cookies,
+      {this.cookies,
+      this.qifengCookies,
       this.weChatData,
       this.password,
       this.userAgent,
