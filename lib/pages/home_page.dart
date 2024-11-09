@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -236,7 +237,7 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
 
   Widget _home(BuildContext context) {
     return Column(mainAxisSize: MainAxisSize.max, children: [
-      if (UserInfo().isActive) 
+      if (UserInfo().isActive || true) 
         Container(
         margin: const EdgeInsets.fromLTRB(15, 0, 15, 0),
         child: SizedBox(
@@ -462,6 +463,19 @@ class _HomePageState extends State<HomePage> with AutomaticKeepAliveClientMixin 
                                      onTap: () => showAlertDialog(context, "过滤数据id", (value) {
                                         userInfo.saveConfig(
                                             filterDataIds: value);
+                                        _updateTasks();
+                                      }, placeholder: "换行分隔"),
+                                    ),
+                                     ListTile(
+                                     title: const Text("筛选数据"),
+                                     onTap: () => showAlertDialog(context, "筛选数据", (value) {
+                                        if (_baseUrl == kBaseQiziUrl) {
+                                          userInfo.saveConfig(
+                                            filterData1:  value);
+                                        } else {
+                                          userInfo.saveConfig(
+                                            filterData2:  value);
+                                        }
                                         _updateTasks();
                                       }, placeholder: "换行分隔"),
                                     )

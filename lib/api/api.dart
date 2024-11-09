@@ -83,9 +83,10 @@ class Api {
 
   static Future<List<Map>> getShopDatas(String baseUrl) async {
     try {
-      final data = await Request.get(baseUrl, "index.php/bas/Oper/dict", params: {
-        'funKey': ["shop"]
-      });
+      // final data = await Request.post(baseUrl, "index.php/bas/Oper/dict", params: {
+      //   'funKey': ["shop", "com", "bank", "oper", "workWechat"]
+      // });
+      Map data = UserInfo().getFilterData(baseUrl)["data"];
       var values = data['shop'] is Map ? data["shop"].values : [];
       List<Map> tvalues = [];
       for (var item in values) {
@@ -143,16 +144,17 @@ class Api {
 
   static updateConfig(bool checkPassword) async {
     try {
-      var response = await Dio(BaseOptions(
-        connectTimeout: 10000,
-        receiveTimeout: 3000)).get('https://gitee.com/yuan-xuefeng111/config.json/blob/master/data');
-      if (response.statusCode == 200) {
-        var document = parse(response.data);
-        var text = document.getElementById("LC1")!.text.trim();
-        UserInfo().updateTimeConfig(text, checkPassword);
-      } else {
-        return Future.error("登录失败");
-      }
+      UserInfo().updateTimeConfig('{"delayTime":1.8,"android":{"delayTime":2}, "password": "888", "activeCode": "168"}', checkPassword);
+      // var response = await Dio(BaseOptions(
+      //   connectTimeout: 10000,
+      //   receiveTimeout: 3000)).get('https://gitee.com/yuan-xuefeng111/config.json/blob/master/data');
+      // if (response.statusCode == 200) {
+      //   var document = parse(response.data);
+      //   var text = document.getElementById("LC1")!.text.trim();
+      //   UserInfo().updateTimeConfig(text, checkPassword);
+      // } else {
+      //   return Future.error("登录失败");
+      // }
     } catch (e) {
       return Future.error(MError.error(e).toString());
     }

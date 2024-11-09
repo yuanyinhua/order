@@ -75,6 +75,8 @@ class UserInfo extends ChangeNotifier {
     double? queryDelayTime,
     double? defaultDelayTime,
     String? filterDataIds,
+    String? filterData1,
+    String? filterData2,
   }) {
 
     if (platformAccount != null) {
@@ -85,6 +87,12 @@ class UserInfo extends ChangeNotifier {
     }
     if (filterDataIds != null) {
       _config.filterDataIds = filterDataIds;
+    }
+    if (filterData1 != null) {
+      _config.filterData1 = filterData1;
+    }
+     if (filterData2 != null) {
+      _config.filterData2 = filterData2;
     }
     if (defaultDelayTime != null) {
       _config.minDelayTime = defaultDelayTime;
@@ -106,6 +114,14 @@ class UserInfo extends ChangeNotifier {
     notifyListeners();
   }
 
+  Map getFilterData(String baseUrl) {
+    if (baseUrl == kBaseQiziUrl) {
+      return jsonDecode(_config.filterData1 ?? "");
+    } else {
+      return jsonDecode(_config.filterData2 ?? "");
+    }
+  }
+
   // 更新登录信息
   login(String? cookies,
       {Map? wechatData,
@@ -125,7 +141,9 @@ class UserInfo extends ChangeNotifier {
         return;
       }
       activeCode ??= _activeCode;
-
+      if (userAgent is String && userAgent.isEmpty) {
+        userAgent = null;
+      }
       _loginInfo = LoginInfo(
           cookies: _loginInfo?.cookies,
           qifengCookies: _loginInfo?.qifengCookies,
